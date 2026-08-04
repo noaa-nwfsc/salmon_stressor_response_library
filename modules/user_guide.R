@@ -78,10 +78,10 @@ userGuideUI <- function(id) {
         tags$li("Low confidence indicates high variance, conflicting trends, or limited replication."),
       ),
       h3("4. Applicability to System"),
-      p("This ranking assesses how transferable the stressor-response function is to other populations, locations, or environmental contexts."),
+      p("This ranking assesses how applicable the underlying data and derived function are to the specific system or context where it is currently being applied."),
       tags$ul(
-        tags$li("High confidence means the function was derived under conditions similar to where it is applied (species, stock, habitat type, stressor regime)."),
-        tags$li("Low confidence is appropriate when extrapolating across systems, regions, or biological differences."),
+        tags$li("High confidence means the function was derived using data highly representative of the specific system in question (matching species, life stage, habitat type, and stressor regime)."),
+        tags$li("Low confidence indicates that the function is being applied to a system with notable biological or environmental differences from the original study context.")
       ),
       h3("5. Potential Stressor Interactions"),
       p("This ranking considers whether the stressor-response function may be influenced by interactions with other environmental stressors (e.g., temperature × flow)."),
