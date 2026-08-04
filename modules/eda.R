@@ -14,6 +14,15 @@ edaUI <- function(id) {
   tagList(
     fluidPage(
       h3("Topics Covered in the e-Library", style = "color: #0077b6; text-align: center;"),
+      # ── Database Status Notice ───────────────────────────────────────────
+      div(
+        style = "background-color: #eef2f5; border-left: 5px solid #3182ce; padding: 15px; margin-bottom: 25px; border-radius: 4px;",
+        p(
+          style = "margin: 0; font-size: 1.1em; color: #2c3e50;",
+          strong("Database Status: "), 
+          "Currently, this e-library features a comprehensive review of freshwater stressor-response functions for salmonids in California. We are actively expanding the database and will be adding relationships from other geographic locations along the West Coast soon!"
+        )
+      ),
       tabsetPanel(
         tabPanel("Stressor Distribution", plotlyOutput(ns("plot_stressor"))),
         tabPanel("Species", plotlyOutput(ns("plot_species"))),
