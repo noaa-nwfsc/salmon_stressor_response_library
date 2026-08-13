@@ -136,7 +136,7 @@ upload_ui <- function(id) {
       ),
       fluidRow(
         column(8, offset = 2, textInput(ns("conf_variance"), "Data Variance/Consistency", placeholder = "Describe the variability, noise, or inconsistency in the underlying dataset. Rank it as either High, Moderate, or Low", width = "100%")),
-        column(8, offset = 2, textInput(ns("conf_applicability"), "Applicability to System", placeholder = "Describe how transferable the stressor-response function is to other populations, locations, or environmental contexts. Rank it as either High, Moderate, or Low", width = "100%"))
+        column(8, offset = 2, textInput(ns("conf_applicability"), "Applicability to System", placeholder = "Describe how applicable the underlying data and derived function are to the specific system or context where it is currently being applied.. Rank it as either High, Moderate, or Low", width = "100%"))
       ),
       fluidRow(
         column(8, offset = 2, textInput(ns("conf_interactions"), "Potential Stressor Interactions", placeholder = "Describe whether the stressor-response function may be influenced by interactions with other environmental stressors (e.g., temperature × flow). Rank it as either High, Moderate, or Low", width = "100%"))
