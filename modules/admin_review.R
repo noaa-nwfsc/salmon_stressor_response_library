@@ -4,6 +4,7 @@ library(shiny)
 library(DT)
 library(DBI)
 library(jsonlite)
+library(dplyr)
 
 admin_review_ui <- function(id) {
   ns <- NS(id)
@@ -18,9 +19,14 @@ admin_review_server <- function(id, db_conn) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    # ── 1. Fetch Pending Submissions ──
     refresh_trigger <- reactiveVal(0)
     
+    # Reactive containers to hold the files for the download handlers
+    active_pdf_data <- reactiveVal(NULL)
+    active_pdf_name <- reactiveVal(NULL)
+    active_csv_data <- reactiveVal(NULL)
+    
+    # ── 1. Fetch Pending Submissions ──
     staging_data <- reactive({
       refresh_trigger()
       dbGetQuery(db_conn, "
@@ -36,7 +42,6 @@ admin_review_server <- function(id, db_conn) {
     # ── 2. Render the Table with Action Buttons ──
     output$staging_table <- renderDT({
       df <- staging_data()
-      
       if (nrow(df) > 0) {
         df$Actions <- sprintf(
           '<button id="review_btn_%s" type="button" class="btn btn-primary btn-sm" onclick="Shiny.setInputValue(\'%s\', %s, {priority: \'event\'})">Review</button>',
@@ -45,12 +50,9 @@ admin_review_server <- function(id, db_conn) {
       } else {
         df$Actions <- character(0)
       }
-      
       datatable(
         df[, c("staging_id", "submission_date", "submitter_name", "title", "Actions")],
-        escape = FALSE, 
-        selection = "none",
-        rownames = FALSE,
+        escape = FALSE, selection = "none", rownames = FALSE,
         options = list(pageLength = 10, autoWidth = TRUE)
       )
     })
@@ -64,19 +66,28 @@ admin_review_server <- function(id, db_conn) {
       req(nrow(sub_data) > 0)
       sub_row <- sub_data[1, ]
       
-      # Helpers to handle strings and RPostgres list-arrays cleanly
+      csv_df <- dbGetQuery(db_conn, "SELECT * FROM staging_csv_data WHERE staging_id = $1 ORDER BY row_index", params = list(sid))
+      active_csv_data(csv_df)
+      
+      # Handle PDF extraction (BYTEA comes in as a list of raw vectors)
+      if (!is.null(sub_row$supporting_pdf) && length(sub_row$supporting_pdf[[1]]) > 0) {
+        active_pdf_data(sub_row$supporting_pdf[[1]])
+        active_pdf_name(sub_row$pdf_filename)
+      } else {
+        active_pdf_data(NULL)
+        active_pdf_name(NULL)
+      }
+      
       safe_val <- function(v) if (is.null(v) || is.na(v)) "" else as.character(v)
       safe_arr <- function(v) {
         if (is.null(v) || is.na(v) || length(v) == 0) return(character(0))
         if (is.list(v)) v <- unlist(v)
-        # Fallback if it comes as a raw "{a,b}" string instead of a parsed list
         if (is.character(v) && length(v) == 1 && grepl("^\\{.*\\}$", v)) {
           v <- strsplit(gsub("^\\{|\\}$|\"", "", v), ",")[[1]]
         }
         return(trimws(v))
       }
       
-      # Arrays
       arr_species <- safe_arr(sub_row$species_common_name)
       arr_latin <- safe_arr(sub_row$latin_name)
       arr_life <- safe_arr(sub_row$life_stages)
@@ -95,11 +106,23 @@ admin_review_server <- function(id, db_conn) {
                 strong("Submitter Notes:"), p(sub_row$submitter_notes))
           },
           
+          # ── Data & Files Preview ──
+          h4("Uploaded Data & Files", style = "border-bottom: 1px solid #ddd; padding-bottom: 5px;"),
+          fluidRow(
+            column(12, 
+              div(style = "margin-bottom: 15px;", 
+                downloadButton(ns("dl_csv"), "Download CSV Data", class = "btn-info"),
+                uiOutput(ns("rev_pdf_ui"), inline = TRUE, style = "margin-left: 10px;")
+              )
+            )
+          ),
+          fluidRow(
+            column(12, DTOutput(ns("rev_csv_preview")), style = "margin-bottom: 25px;")
+          ),
+          
           # ── Core Metadata ──
           h4("Article & Function Metadata", style = "border-bottom: 1px solid #ddd; padding-bottom: 5px;"),
-          fluidRow(
-            column(12, textInput(ns("rev_title"), "Article Title *", value = safe_val(sub_row$title), width = "100%"))
-          ),
+          fluidRow(column(12, textInput(ns("rev_title"), "Article Title *", value = safe_val(sub_row$title), width = "100%"))),
           fluidRow(
             column(6, textInput(ns("rev_article_type"), "Article Type *", value = safe_val(sub_row$article_type), width = "100%")),
             column(6, textInput(ns("rev_response"), "Response *", value = safe_val(sub_row$response), width = "100%"))
@@ -124,9 +147,7 @@ admin_review_server <- function(id, db_conn) {
             column(6, selectizeInput(ns("rev_country"), "Country *", choices = arr_country, selected = arr_country, multiple = TRUE, options = list(create = TRUE), width = "100%")),
             column(6, selectizeInput(ns("rev_state"), "State / Province", choices = arr_state, selected = arr_state, multiple = TRUE, options = list(create = TRUE), width = "100%"))
           ),
-          fluidRow(
-            column(12, selectizeInput(ns("rev_deriv"), "Function Derivation", choices = arr_deriv, selected = arr_deriv, multiple = TRUE, options = list(create = TRUE), width = "100%"))
-          ),
+          fluidRow(column(12, selectizeInput(ns("rev_deriv"), "Function Derivation", choices = arr_deriv, selected = arr_deriv, multiple = TRUE, options = list(create = TRUE), width = "100%"))),
           fluidRow(
             column(12, textAreaInput(ns("rev_overview"), "Overview Description *", value = safe_val(sub_row$overview), height = "100px", width = "100%")),
             column(12, textAreaInput(ns("rev_transfer"), "Transferability of Function", value = safe_val(sub_row$transferability_of_function), height = "60px", width = "100%")),
@@ -155,12 +176,39 @@ admin_review_server <- function(id, db_conn) {
       session$userData$current_review_data <- sub_row
     })
     
+    # ── Render File Downloads & Preview ──
+    output$rev_pdf_ui <- renderUI({
+      if (!is.null(active_pdf_data())) {
+        downloadButton(ns("dl_pdf"), paste("Download", active_pdf_name()), class = "btn-info")
+      } else {
+        span(em("No PDF attached."), style = "color: #777; margin-left: 15px;")
+      }
+    })
+    
+    output$dl_pdf <- downloadHandler(
+      filename = function() { active_pdf_name() },
+      content = function(file) { writeBin(active_pdf_data(), file) }
+    )
+    
+    output$rev_csv_preview <- renderDT({
+      req(active_csv_data())
+      datatable(
+        active_csv_data() %>% select(-staging_id, -row_index),
+        options = list(pageLength = 5, scrollX = TRUE, dom = 'tip'),
+        rownames = FALSE
+      )
+    })
+    
+    output$dl_csv <- downloadHandler(
+      filename = function() { paste0("staging_data_", session$userData$current_review_id, ".csv") },
+      content = function(file) { write.csv(active_csv_data() %>% select(-staging_id, -row_index), file, row.names = FALSE) }
+    )
+    
     # ── 4. Approve & Publish Logic ──
     observeEvent(input$approve_sub, {
       sid <- session$userData$current_review_id
       sub_row <- session$userData$current_review_data
       
-      # Array formatting helper for PG
       to_pg_array <- function(val) {
         if (is.null(val) || length(val) == 0) return(NA_character_)
         parts <- unlist(lapply(val, function(x) trimws(strsplit(x, ",")[[1]])))
@@ -170,11 +218,9 @@ admin_review_server <- function(id, db_conn) {
       }
       
       tryCatch({
-        # Generate new article_id
         max_id_res <- dbGetQuery(db_conn, "SELECT MAX(article_id) as max_id FROM stressor_responses")
         new_article_id <- if(is.na(max_id_res$max_id[1])) 1 else as.integer(max_id_res$max_id[1] + 1)
         
-        # INSERT full data into live stressor_responses
         query_insert <- "
           INSERT INTO stressor_responses (
             article_id, title, article_type, stressor_name, broad_stressor_name, specific_stressor_metric,
@@ -186,7 +232,6 @@ admin_review_server <- function(id, db_conn) {
           )
         "
         
-        # Safe handling for JSON citations in case they are null
         cit_json <- if (is.null(sub_row$citations) || is.na(sub_row$citations)) "[]" else as.character(sub_row$citations)
 
         dbExecute(db_conn, query_insert, params = list(
@@ -196,14 +241,12 @@ admin_review_server <- function(id, db_conn) {
           input$rev_conf_source, input$rev_conf_shape, input$rev_conf_var, input$rev_conf_app, input$rev_conf_int, cit_json
         ))
         
-        # Move CSV Data over
         dbExecute(db_conn, "
           INSERT INTO csv_data (article_id, row_index, curve_id, stressor_label, stressor_x, units_x, response_label, response_y, units_y, plot_type, stressor_value, lower_limit, upper_limit, sd)
           SELECT $1, row_index, curve_id, stressor_label, stressor_x, units_x, response_label, response_y, units_y, plot_type, stressor_value, lower_limit, upper_limit, sd
           FROM staging_csv_data WHERE staging_id = $2
         ", params = list(new_article_id, sid))
         
-        # Mark as Approved in staging table
         dbExecute(db_conn, "UPDATE staging_submissions SET status = 'Approved' WHERE staging_id = $1", params = list(sid))
         
         removeModal()
