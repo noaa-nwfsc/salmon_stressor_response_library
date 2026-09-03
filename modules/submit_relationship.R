@@ -295,17 +295,16 @@ submit_relationship_server <- function(id) {
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24::jsonb, $25, $26
           ) RETURNING staging_id;"
           
-        res <- dbSendQuery(db_conn, query)
-        dbBind(res, list(
+        res <- dbGetQuery(db_conn, query, params = list(
           input$submitter_name, input$submitter_email, input$submitter_notes,
           input$article_type, input$title, input$stressor_name, input$broad_stressor_name, input$specific_stressor_metric,
           input$response, input$srf_formula, to_pg_array(input$species_common_name), to_pg_array(input$latin_name), to_pg_array(input$life_stages),
           to_pg_array(input$location_country), to_pg_array(input$location_state_province), input$overview, to_pg_array(input$function_derivation), input$transferability_of_function,
           input$conf_source, input$conf_shape, input$conf_variance, input$conf_applicability, input$conf_interactions,
-          citation_json, if(is.null(pdf_binary)) list(NULL) else list(pdf_binary), pdf_name
+          citation_json, pdf_binary, pdf_name
         ))
-        new_staging_id <- dbFetch(res)$staging_id
-        dbClearResult(res)
+        
+        new_staging_id <- res$staging_id
 
         # 2. Insert into staging_csv_data
         df_csv <- csv_res$data
