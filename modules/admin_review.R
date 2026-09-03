@@ -21,7 +21,6 @@ admin_review_server <- function(id, db_conn) {
     
     refresh_trigger <- reactiveVal(0)
     
-    # Reactive containers to hold the files for the download handlers
     active_pdf_data <- reactiveVal(NULL)
     active_pdf_name <- reactiveVal(NULL)
     active_csv_data <- reactiveVal(NULL)
@@ -57,7 +56,7 @@ admin_review_server <- function(id, db_conn) {
       )
     })
     
-    # ── 3. Handle Review Button Click (Open Massive Modal) ──
+    # ── 3. Handle Review Button Click (Open Full-Screen Modal) ──
     observeEvent(input$review_click, {
       req(input$review_click)
       sid <- input$review_click
@@ -69,7 +68,6 @@ admin_review_server <- function(id, db_conn) {
       csv_df <- dbGetQuery(db_conn, "SELECT * FROM staging_csv_data WHERE staging_id = $1 ORDER BY row_index", params = list(sid))
       active_csv_data(csv_df)
       
-      # Handle PDF extraction (BYTEA comes in as a list of raw vectors)
       if (!is.null(sub_row$supporting_pdf) && length(sub_row$supporting_pdf[[1]]) > 0) {
         active_pdf_data(sub_row$supporting_pdf[[1]])
         active_pdf_name(sub_row$pdf_filename)
@@ -101,6 +99,14 @@ admin_review_server <- function(id, db_conn) {
         easyClose = FALSE,
         
         tagList(
+          # Injecting custom CSS to force full-width modal
+          tags$style(HTML("
+            .modal-dialog {
+              width: 95vw !important;
+              max-width: 95vw !important;
+            }
+          ")),
+          
           if (safe_val(sub_row$submitter_notes) != "") {
             div(style = "background-color: #fff3cd; padding: 15px; border-left: 5px solid #ffeeba; margin-bottom: 20px;",
                 strong("Submitter Notes:"), p(sub_row$submitter_notes))
