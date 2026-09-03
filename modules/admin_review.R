@@ -25,6 +25,21 @@ admin_review_server <- function(id, db_conn) {
     active_pdf_name <- reactiveVal(NULL)
     active_csv_data <- reactiveVal(NULL)
     
+    # ── Database Choice Helpers ──
+    get_distinct <- function(col) {
+      tryCatch({
+        res <- dbGetQuery(db_conn, sprintf("SELECT DISTINCT %s AS val FROM stressor_responses WHERE %s IS NOT NULL", col, col))
+        sort(res$val[res$val != ""])
+      }, error = function(e) character(0))
+    }
+    
+    get_distinct_array <- function(col) {
+      tryCatch({
+        res <- dbGetQuery(db_conn, sprintf("SELECT DISTINCT unnest(%s) AS val FROM stressor_responses WHERE %s IS NOT NULL", col, col))
+        sort(res$val[res$val != ""])
+      }, error = function(e) character(0))
+    }
+    
     # ── 1. Fetch Pending Submissions ──
     staging_data <- reactive({
       refresh_trigger()
@@ -93,13 +108,26 @@ admin_review_server <- function(id, db_conn) {
       arr_state <- safe_arr(sub_row$location_state_province)
       arr_deriv <- safe_arr(sub_row$function_derivation)
 
+      # ── Pull Live DB Choices & Merge with Submitted Values ──
+      choices_article_type <- unique(c(safe_val(sub_row$article_type), get_distinct("article_type")))
+      choices_response <- unique(c(safe_val(sub_row$response), get_distinct("response")))
+      choices_stressor <- unique(c(safe_val(sub_row$stressor_name), get_distinct("stressor_name")))
+      choices_broad <- unique(c(safe_val(sub_row$broad_stressor_name), get_distinct("broad_stressor_name")))
+      choices_metric <- unique(c(safe_val(sub_row$specific_stressor_metric), get_distinct("specific_stressor_metric")))
+      
+      choices_species <- unique(c(arr_species, get_distinct_array("species_common_name")))
+      choices_latin <- unique(c(arr_latin, get_distinct_array("latin_name")))
+      choices_life <- unique(c(arr_life, get_distinct_array("life_stages")))
+      choices_country <- unique(c(arr_country, get_distinct_array("location_country")))
+      choices_state <- unique(c(arr_state, get_distinct_array("location_state_province")))
+      choices_deriv <- unique(c(arr_deriv, get_distinct_array("function_derivation")))
+
       showModal(modalDialog(
         title = paste("Reviewing Submission ID:", sid, "| From:", safe_val(sub_row$submitter_name)),
         size = "xl",
         easyClose = FALSE,
         
         tagList(
-          # Injecting custom CSS to force full-width modal
           tags$style(HTML("
             .modal-dialog {
               width: 95vw !important;
@@ -130,30 +158,30 @@ admin_review_server <- function(id, db_conn) {
           h4("Article & Function Metadata", style = "border-bottom: 1px solid #ddd; padding-bottom: 5px;"),
           fluidRow(column(12, textInput(ns("rev_title"), "Article Title *", value = safe_val(sub_row$title), width = "100%"))),
           fluidRow(
-            column(6, textInput(ns("rev_article_type"), "Article Type *", value = safe_val(sub_row$article_type), width = "100%")),
-            column(6, textInput(ns("rev_response"), "Response *", value = safe_val(sub_row$response), width = "100%"))
+            column(6, selectizeInput(ns("rev_article_type"), "Article Type *", choices = choices_article_type, selected = safe_val(sub_row$article_type), options = list(create = TRUE), width = "100%")),
+            column(6, selectizeInput(ns("rev_response"), "Response *", choices = choices_response, selected = safe_val(sub_row$response), options = list(create = TRUE), width = "100%"))
           ),
           
           # ── Stressor & Species ──
           h4("Stressor & Species", style = "margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;"),
           fluidRow(
-            column(4, textInput(ns("rev_stressor"), "Stressor Name *", value = safe_val(sub_row$stressor_name), width = "100%")),
-            column(4, textInput(ns("rev_broad_stressor"), "Broad Stressor Name *", value = safe_val(sub_row$broad_stressor_name), width = "100%")),
-            column(4, textInput(ns("rev_metric"), "Specific Stressor Metric *", value = safe_val(sub_row$specific_stressor_metric), width = "100%"))
+            column(4, selectizeInput(ns("rev_stressor"), "Stressor Name *", choices = choices_stressor, selected = safe_val(sub_row$stressor_name), options = list(create = TRUE), width = "100%")),
+            column(4, selectizeInput(ns("rev_broad_stressor"), "Broad Stressor Name *", choices = choices_broad, selected = safe_val(sub_row$broad_stressor_name), options = list(create = TRUE), width = "100%")),
+            column(4, selectizeInput(ns("rev_metric"), "Specific Stressor Metric *", choices = choices_metric, selected = safe_val(sub_row$specific_stressor_metric), options = list(create = TRUE), width = "100%"))
           ),
           fluidRow(
-            column(4, selectizeInput(ns("rev_species"), "Species Common Name *", choices = arr_species, selected = arr_species, multiple = TRUE, options = list(create = TRUE), width = "100%")),
-            column(4, selectizeInput(ns("rev_latin"), "Latin Name *", choices = arr_latin, selected = arr_latin, multiple = TRUE, options = list(create = TRUE), width = "100%")),
-            column(4, selectizeInput(ns("rev_life"), "Life Stages", choices = arr_life, selected = arr_life, multiple = TRUE, options = list(create = TRUE), width = "100%"))
+            column(4, selectizeInput(ns("rev_species"), "Species Common Name *", choices = choices_species, selected = arr_species, multiple = TRUE, options = list(create = TRUE), width = "100%")),
+            column(4, selectizeInput(ns("rev_latin"), "Latin Name *", choices = choices_latin, selected = arr_latin, multiple = TRUE, options = list(create = TRUE), width = "100%")),
+            column(4, selectizeInput(ns("rev_life"), "Life Stages", choices = choices_life, selected = arr_life, multiple = TRUE, options = list(create = TRUE), width = "100%"))
           ),
           
           # ── Location & Descriptions ──
           h4("Location & Overviews", style = "margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;"),
           fluidRow(
-            column(6, selectizeInput(ns("rev_country"), "Country *", choices = arr_country, selected = arr_country, multiple = TRUE, options = list(create = TRUE), width = "100%")),
-            column(6, selectizeInput(ns("rev_state"), "State / Province", choices = arr_state, selected = arr_state, multiple = TRUE, options = list(create = TRUE), width = "100%"))
+            column(6, selectizeInput(ns("rev_country"), "Country *", choices = choices_country, selected = arr_country, multiple = TRUE, options = list(create = TRUE), width = "100%")),
+            column(6, selectizeInput(ns("rev_state"), "State / Province", choices = choices_state, selected = arr_state, multiple = TRUE, options = list(create = TRUE), width = "100%"))
           ),
-          fluidRow(column(12, selectizeInput(ns("rev_deriv"), "Function Derivation", choices = arr_deriv, selected = arr_deriv, multiple = TRUE, options = list(create = TRUE), width = "100%"))),
+          fluidRow(column(12, selectizeInput(ns("rev_deriv"), "Function Derivation", choices = choices_deriv, selected = arr_deriv, multiple = TRUE, options = list(create = TRUE), width = "100%"))),
           fluidRow(
             column(12, textAreaInput(ns("rev_overview"), "Overview Description *", value = safe_val(sub_row$overview), height = "100px", width = "100%")),
             column(12, textAreaInput(ns("rev_transfer"), "Transferability of Function", value = safe_val(sub_row$transferability_of_function), height = "60px", width = "100%")),
