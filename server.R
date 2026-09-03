@@ -18,6 +18,7 @@ source("modules/eda.R", local = TRUE)
 source("modules/submit_relationship.R", local = TRUE)
 source("modules/overlay_plot.R", local = TRUE)
 source("modules/edit_article.R", local = TRUE)
+source("modules/admin_review.R", local = TRUE)
 
 server <- function(input, output, session) {
   db <- pool
