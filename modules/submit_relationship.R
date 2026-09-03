@@ -301,7 +301,9 @@ submit_relationship_server <- function(id) {
           input$response, input$srf_formula, to_pg_array(input$species_common_name), to_pg_array(input$latin_name), to_pg_array(input$life_stages),
           to_pg_array(input$location_country), to_pg_array(input$location_state_province), input$overview, to_pg_array(input$function_derivation), input$transferability_of_function,
           input$conf_source, input$conf_shape, input$conf_variance, input$conf_applicability, input$conf_interactions,
-          citation_json, pdf_binary, pdf_name
+          citation_json, 
+          if(is.null(pdf_binary)) NULL else list(pdf_binary),
+          pdf_name
         ))
         
         new_staging_id <- res$staging_id
