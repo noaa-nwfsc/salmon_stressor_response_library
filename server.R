@@ -190,6 +190,7 @@ server <- function(input, output, session) {
     # Check if the viewer is on the admin list
     if (session$user %in% admin_users) {
       
+      # 1. Insert the Admin Upload Tab
       insertTab(
         inputId = "main_navbar", 
         target = "submit_relationship", # Matches the 'value' of the tab in ui.R
@@ -197,15 +198,28 @@ server <- function(input, output, session) {
         tabPanel(
           title = "Admin Upload",
           value = "admin_upload_tab",
-          icon = icon("lock"),
+          icon = icon("upload"),
           upload_ui("secure_admin_upload") 
         )
       )
-      
       upload_server("secure_admin_upload", db_conn = db, current_user = session$user)
+      
+      # 2. Insert the new Admin Review Queue Tab
+      insertTab(
+        inputId = "main_navbar",
+        target = "admin_upload_tab",
+        position = "after",
+        tabPanel(
+          title = "Review Queue",
+          value = "admin_review_tab",
+          icon = icon("tasks"),
+          admin_review_ui("secure_admin_review")
+        )
+      )
+      admin_review_server("secure_admin_review", db_conn = db)
     }
   })
-
+      
   # ── Article modal ──────────────────────────────────────────────────────────
   # Track which articles have had render_article_server called to avoid
   # registering duplicate output renderers on repeated modal opens.
