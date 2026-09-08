@@ -324,7 +324,7 @@ submit_relationship_server <- function(id) {
           to_pg_array(input$location_country), to_pg_array(input$location_state_province), input$overview, to_pg_array(input$function_derivation), input$transferability_of_function,
           input$conf_source, input$conf_shape, input$conf_variance, input$conf_applicability, input$conf_interactions,
           citation_json, 
-          if(is.null(pdf_binary)) NULL else list(pdf_binary),
+          list(pdf_binary),
           pdf_name
         ))
         
