@@ -60,6 +60,56 @@ about_us <- function(id) {
             )
           )
         )
+      ),
+      
+      # ── Where Our Data Comes From (Full-width Block) ──
+      div(
+        style = "margin-top: 40px; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid #f39c12;",
+        h3("Where Our Data Comes From", style = "margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; font-weight: 600;"),
+        p("This library represents a collaborative effort spanning multiple agencies, universities, and international partnerships. Our functional relationships are continually aggregated from several foundational sources and active literature reviews:", style = "font-size: 16px; margin-bottom: 20px; color: #444;"),
+        
+        tags$ul(style = "line-height: 1.8; font-size: 15px; color: #444;",
+          
+          # Foundational Aggregation
+          tags$li(style = "margin-bottom: 15px;",
+            strong("Foundational Libraries: "),
+            "In collaboration with our Canadian colleagues, we seeded the database by transitioning 112 relationships from Matthew Bayly’s Drupal library (see link above). This included expert elicitations, Government of Alberta reports, and foundational literature (e.g., Cramer 2001, Bjornn & Reiser 1991, Honea et al. 2016). Simultaneously, Aimee Fullerton led a team of interns in compiling early E2F Temperature, Sediment, and Flow survival relationships via GitHub, which are now fully integrated here."
+          ),
+          
+          # Regional Literature Reviews
+          tags$li(style = "margin-bottom: 15px;",
+            strong("Regional Literature Reviews: "),
+            "To build comprehensive spatial coverage, our team partnered with NOAA Central Librarians to screen over 1,800 papers focusing specifically on California’s freshwater Pacific salmonids. These actively derived relationships currently make up a significant portion of our library. In tandem, our Canadian colleagues conducted a massive 30,000-paper review spanning the remainder of the Pacific Northwest (WA, ID, OR, B.C., and Yukon), which we plan to ingest following their publication."
+          ),
+          
+          # Specialized Topics & Databases
+          tags$li(style = "margin-bottom: 15px;",
+            strong("Toxicological Functions: "),
+            "Toxicological functional relationships have been derived and integrated based on source material provided by Julann Spromberg (NOAA Ecotoxicologist). We will continue to add toxicology functional relationships as they appear."
+          ),
+          tags$li(style = "margin-bottom: 15px;",
+            strong("Related Sister Databases: "),
+            "We are actively mining and cross-referencing functional relationships from two large literature reviews:",
+            tags$ul(style = "margin-top: 8px; list-style-type: circle;",
+              tags$li(
+                "Lisa Crozier's Climate Change Vulnerability Database — ",
+                tags$a(href = "https://connect.fisheries.noaa.gov/ClimateSalmonLiterature/", "Explore Database", target = "_blank"), " | ",
+                tags$a(href = "https://doi.org/10.1038/s42003-021-01734-w", "Read Paper", target = "_blank")
+              ),
+              tags$li(
+                "John McMillan's Thermal Stress Database — ",
+                tags$a(href = "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Ffme.12643&file=fme12643-sup-0002-AppendixS2.html", "Explore Database", target = "_blank"), " | ",
+                tags$a(href = "https://doi.org/10.1111/fme.12643", "Read Paper", target = "_blank")
+              )
+            )
+          ),
+          
+          # Future Scope
+          tags$li(style = "margin-bottom: 10px;",
+            strong("Future Expansion: "),
+            "While currently focused on freshwater environments, we are charting paths to incorporate more downstream relationships encompassing estuary and ocean life stages."
+          )
+        )
       )
     )
   )
