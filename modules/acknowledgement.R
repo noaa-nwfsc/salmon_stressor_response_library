@@ -77,7 +77,7 @@ acknowledgement_ui <- function(id, n = NULL) {
               tags$li("Sierra Sullivan (The University of British Columbia)"),
               tags$li("Jordan Rosenfeld (British Columbia Ministry of Environment)"),
               tags$li("Matthew Bayly (M.J. Bayly Analytics Ltd.)"),
-              tags$li("Mathew Bakken (The University of British Columbia)"),
+              tags$li("Matthew Bakken (The University of British Columbia)"),
               tags$li("Alexandra Tekatch (ESSA Technologies Ltd.)")
             )
           )
