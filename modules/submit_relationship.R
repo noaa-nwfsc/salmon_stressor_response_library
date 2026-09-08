@@ -58,7 +58,7 @@ submit_relationship_ui <- function(id) {
         column(8, offset = 2, wellPanel(
           style = "background-color: #f9f9f9; border-color: #ccc; margin-top: 15px; margin-bottom: 25px;",
           strong("Data Uploads"),
-          div(id = ns("csv_wrapper"), customFileInput(ns("sr_csv_file"), "SR Curve Data CSV *", accept = ".csv")),
+          div(id = ns("csv_wrapper"), customFileInput(ns("sr_csv_file"), "Optional: Stressor-Response Curve Data CSV", accept = ".csv")),
           uiOutput(ns("csv_validation_status")),
           downloadButton(ns("download_csv_template"), "Download CSV Template", class = "btn btn-info mb-2"),
           hr(),
@@ -229,7 +229,26 @@ submit_relationship_server <- function(id) {
         }
       })
     })
-
+        
+    # ── Live Duplicate Title Check ──
+    observeEvent(input$title, {
+      req(nchar(input$title) > 5)
+      
+      existing_titles <- dbGetQuery(db_conn, "SELECT title FROM stressor_responses WHERE title IS NOT NULL")$title
+      matches <- agrep(tolower(input$title), tolower(existing_titles), max.distance = 0.15, value = TRUE)
+      
+      output$title_warning <- renderUI({
+        if (length(matches) > 0) {
+          div(style = "color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; margin-top: -10px; margin-bottom: 15px;",
+              icon("exclamation-triangle"), 
+              strong(" Potential Duplicate:"), " A similarly titled article already exists in the database. Please verify before submitting."
+          )
+        } else {
+          NULL
+        }
+      })
+    })
+        
     # ── Submit to Staging Database ──
     observeEvent(input$submit_relationship, {
       # Basic required field checks
@@ -238,17 +257,18 @@ submit_relationship_server <- function(id) {
         return()
       }
 
-      if (is.null(input$sr_csv_file)) {
-        show_error_modal(session, "Missing CSV", "Please upload a CSV file containing your SR curve data.")
-        return()
+      # Initialize empty CSV result
+      csv_res <- list(valid = FALSE, data = data.frame())
+        
+      # Only validate if a CSV was actually uploaded
+      if (!is.null(input$sr_csv_file)) {
+        csv_res <- validate_csv_upload(input$sr_csv_file)
+        if (!csv_res$valid) {
+          show_error_modal(session, "Invalid CSV", "Please fix your CSV file before submitting.")
+          return()
+        }
       }
       
-      csv_res <- validate_csv_upload(input$sr_csv_file)
-      if (!csv_res$valid) {
-        show_error_modal(session, "Invalid CSV", "Please fix your CSV file before submitting.")
-        return()
-      }
-
       # Compile citations to JSON
       citations_list <- list()
       for (i in 1:citation_count()) {
@@ -310,9 +330,9 @@ submit_relationship_server <- function(id) {
         
         new_staging_id <- res$staging_id
 
-        # 2. Insert into staging_csv_data
-        df_csv <- csv_res$data
-        if (nrow(df_csv) > 0) {
+        # 2. Insert into staging_csv_data (Only if a valid CSV was provided)
+        if (csv_res$valid && nrow(csv_res$data) > 0) {
+          df_csv <- csv_res$data
           df_csv$staging_id <- new_staging_id
           df_csv$row_index <- 1:nrow(df_csv)
           names(df_csv) <- gsub("\\.", "_", names(df_csv))
