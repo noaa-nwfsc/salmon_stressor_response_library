@@ -28,7 +28,9 @@ upload_ui <- function(id) {
 
       # Core Metadata
       fluidRow(
-        column(8, offset = 2, textInput(ns("title"), "Article Title *", placeholder = "Add a short descriptive title", width = "100%"))
+        column(8, offset = 2, textInput(ns("title"), "Article Title *", placeholder = "Add a short descriptive title", width = "100%"),
+        uiOutput(ns("title_warning"))      
+        )
       ),
       fluidRow(
         column(4, offset = 2, selectizeInput(ns("article_type"), "Article Type *", choices = NULL, options = list(create = TRUE, placeholder = "e.g., Peer-reviewed, Report"), width = "100%")),
@@ -272,7 +274,25 @@ upload_server <- function(id, db_conn = pool, current_user = NULL) {
         }
       })
     })
-
+    # ── Live Duplicate Title Check ──
+    observeEvent(input$title, {
+      req(nchar(input$title) > 5)
+      
+      existing_titles <- dbGetQuery(db_conn, "SELECT title FROM stressor_responses WHERE title IS NOT NULL")$title
+      matches <- agrep(tolower(input$title), tolower(existing_titles), max.distance = 0.15, value = TRUE)
+      
+      output$title_warning <- renderUI({
+        if (length(matches) > 0) {
+          div(style = "color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; margin-top: -10px; margin-bottom: 15px;",
+              icon("exclamation-triangle"), 
+              strong(" Potential Duplicate:"), " A similarly titled article already exists in the database. Please verify before submitting."
+          )
+        } else {
+          NULL
+        }
+      })
+    })
+        
     # Insert data into database when "Submit SR Profile" button is clicked
     observeEvent(input$save, {
       req(input$title)
