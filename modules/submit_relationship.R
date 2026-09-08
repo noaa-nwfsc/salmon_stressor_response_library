@@ -44,7 +44,9 @@ submit_relationship_ui <- function(id) {
         column(8, offset = 2, h4("2. Article & Function Metadata", style = "margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;"))
       ),
       fluidRow(
-        column(8, offset = 2, textInput(ns("title"), "Article Title *", placeholder = "Format: Author et al. Year: Function description", width = "100%"))
+        column(8, offset = 2, textInput(ns("title"), "Article Title *", placeholder = "Format: Author et al. Year: Function description", width = "100%"),
+        uiOutput(ns("title_warning"))
+        )
       ),
       fluidRow(
         column(4, offset = 2, selectizeInput(ns("article_type"), "Article Type *", choices = NULL, options = list(create = TRUE), width = "100%")),
@@ -87,9 +89,9 @@ submit_relationship_ui <- function(id) {
         column(8, offset = 2, selectizeInput(ns("function_derivation"), "Function Derivation", choices = NULL, multiple = TRUE, options = list(create = TRUE), width = "100%"))
       ),
       fluidRow(
-        column(8, offset = 2, textAreaInput(ns("overview"), "Overview Description *", height = "120px", width = "100%")),
-        column(8, offset = 2, textAreaInput(ns("transferability_of_function"), "Transferability of Function", height = "80px", width = "100%")),
-        column(8, offset = 2, textAreaInput(ns("srf_formula"), "SRF Formula (LaTeX allowed)", height = "80px", width = "100%"))
+        column(8, offset = 2, textAreaInput(ns("overview"), "Overview Description *", placeholder = "Describe the context of the study and how the function was derived...", height = "120px", width = "100%")),
+        column(8, offset = 2, textAreaInput(ns("transferability_of_function"), "Transferability of Function", placeholder = "In what geographic regions or system types is this function applicable? How generalizable is the function? This can be a high-level description and doesn't have to be comprehensive", height = "80px", width = "100%")),
+        column(8, offset = 2, textAreaInput(ns("srf_formula"), "SRF Formula (LaTeX allowed)", placeholder = "If this paper used a formula/equation to derive the function, describe it here. LaTeX formatting allowed. e.g., $$y = mx + b$$  OR  $$y = \\alpha e^{\\beta x}$$",  height = "80px", width = "100%"))
       ),
       
       # ── Confidence Rankings ──
@@ -97,11 +99,11 @@ submit_relationship_ui <- function(id) {
         column(8, offset = 2, h4("3. Confidence Rankings", style = "margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;"))
       ),
       fluidRow(
-        column(8, offset = 2, textInput(ns("conf_source"), "Data Source", placeholder = "High, Moderate, or Low", width = "100%")),
-        column(8, offset = 2, textInput(ns("conf_shape"), "Shape of SR Function", placeholder = "High, Moderate, or Low", width = "100%")),
-        column(8, offset = 2, textInput(ns("conf_variance"), "Data Variance/Consistency", placeholder = "High, Moderate, or Low", width = "100%")),
-        column(8, offset = 2, textInput(ns("conf_applicability"), "Applicability to System", placeholder = "High, Moderate, or Low", width = "100%")),
-        column(8, offset = 2, textInput(ns("conf_interactions"), "Potential Stressor Interactions", placeholder = "High, Moderate, or Low", width = "100%"))
+        column(8, offset = 2, textInput(ns("conf_source"), "Data Source", placeholder = "e.g., High (Primary empirical data), Low (Proxy species)", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_shape"), "Shape of SR Function", placeholder = "e.g., High (Strong fit), Moderate (Wide confidence intervals)", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_variance"), "Data Variance/Consistency", placeholder = "e.g., High consistency across multiple years", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_applicability"), "Applicability to System", placeholder = "e.g., Specific to Puget Sound lowland streams", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_interactions"), "Potential Stressor Interactions", placeholder = "e.g., Synergistic effects noted with low dissolved oxygen", width = "100%"))
       ),
       
       # ── Citations (Dynamic) ──
@@ -150,7 +152,7 @@ submit_relationship_server <- function(id) {
         footer = modalButton("Close"),
         tagList(
           h4("Metadata Consistency"),
-          p("To help maintain a clean database, please click the dropdown arrows first to see if your term (e.g., Species, Stressor) already exists before typing a new one."),
+          p("To help maintain a clean database, please click the dropdown arrows first to see if your term already exists before typing a new one."),
           hr(),
           h4("Confidence Rankings"),
           p("For each of the 5 confidence categories, please assign a rank of ", strong("High, Moderate, or Low"), ", along with a brief explanation if needed."),
