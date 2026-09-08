@@ -1,122 +1,137 @@
 # nolint start
-
-# Load required modules
 source("modules/csv_validation.R")
 source("modules/csv_template.R")
 source("modules/file_validation.R")
 source("modules/error_handling.R")
 source("modules/customFileInput.R")
 
-# Use namespaced package calls; check optional email/future support
-# (avoid attaching packages inside modules)
-.email_support <- (
-  requireNamespace("future", quietly = TRUE) &&
-    requireNamespace("promises", quietly = TRUE) &&
-    requireNamespace("emayili", quietly = TRUE)
-)
-
 submit_relationship_ui <- function(id) {
   ns <- NS(id)
-
+  
   tagList(
-    fluidPage(
-      tags$head(
-        includeCSS("www/custom.css"),
-      ),
-      shinyjs::useShinyjs(),
+    shinyjs::useShinyjs(),
+    tags$head(
+      includeCSS("www/custom.css")
+    ),
+    
+    div(
+      id = ns("submit_relationship_form"),
+      
       fluidRow(
-        column(8,
-          offset = 2,
-          h2("Submit a Relationship"),
-          p("
-            Use the form below to suggest a new relationship between a stressor and a response.
-            Please provide as much detail as possible to help us evaluate your submission.
-            We also encourage you to upload any relevant data (in CSV format) or source PDFs that can help us understand and verify the relationship you're submitting.
-            After you submit, our team will review the information and get back to you if we have any questions.
-            We appreciate your contribution to making this library more comprehensive and useful for everyone!
-          ")
+        column(8, offset = 2,
+          h2("Submit a Relationship", style = "text-align: center; color: #6082B6;"),
+          p("Use the form below to suggest a new relationship between a stressor and a response. This submission will be placed in a queue for our team to review before being published to the live database.", style = "text-align: center; color: #555;"),
+          div(style = "text-align: center; margin-bottom: 25px;",
+            actionButton(ns("show_readme"), "ℹ️ Formatting Guide (Read Me)", class = "btn-info")
+          )
         )
       ),
-      div(
-        id = ns("submit_relationship_form"),
-        fluidRow(
-          column(
-            6,
-            offset = 3,
-            textInput(ns("name"), "Name *", placeholder = "Your full name"),
-            uiOutput(ns("error_name")),
-            textInput(ns("email"), "Email *", placeholder = "you@example.com"),
-            uiOutput(ns("error_email")),
-            textInput(ns("citation"), "Citation *", placeholder = "Full citation of the primary research article"),
-            uiOutput(ns("error_citation")),
-            shiny::tagAppendAttributes(
-              textInput(ns("title"), "Title *", placeholder = "Title of the SR function"),
-              title = "Format: Author et al. Year: Function description. Example: Honea et al. 2016: Chinook egg-to-fry survival vs incubation temperature",
-              `data-toggle` = "tooltip",
-              `data-placement` = "right",
-              `data-trigger` = "focus"
-            ),
-            uiOutput(ns("error_title"))
-          )
-        ),
-        fluidRow(
-          column(
-            6,
-            offset = 3,
-            textAreaInput(ns("notes"), "Notes *", rows = 5, placeholder = "Use this section to describe the stressor-response relationship you are submitting, why it should be included, and any additional details that you believe would be useful to us."),
-            uiOutput(ns("error_notes"))
-          )
-        ),
-        # optional csv upload for supporting data + optional PDF
-        fluidRow(
-          column(6, offset = 3, wellPanel(
-            strong("Optional File Uploads"),
-            div(id = ns("pdf_wrapper"), customFileInput(ns("supporting_pdf"), "Optional: PDF from which the relationship comes", accept = c(".pdf", "application/pdf"))),
-            shinyjs::hidden(
-              actionButton(ns("remove_pdf"), "Remove PDF",
-                icon = icon("times-circle"),
-                class = "btn btn-sm btn-outline-danger mb-2"
-              )
-            ),
-            uiOutput(ns("pdf_validation_status")),
-            div(id = ns("csv_wrapper"), customFileInput(ns("sr_csv_file"), "Optional: CSV data for relationship curve(s)", accept = ".csv")),
-            shinyjs::hidden(
-              actionButton(ns("remove_csv"), "Remove CSV",
-                icon = icon("times-circle"),
-                class = "btn btn-sm btn-outline-danger mb-2"
-              )
-            ),
-            uiOutput(ns("csv_validation_status")),
-            tags$div(
-              # style = "margin-top:8px;",
-              tags$a(
-                href = "#", class = "link-primary",
-                onclick = "var clickEl = document.querySelector('a[data-value=\"User Guide\"]'); if (clickEl) { clickEl.click(); setTimeout(function(){ var el = document.getElementById('examples-of-valid-csv-files'); if (el) { el.setAttribute('tabindex', '-1'); el.scrollIntoView({behavior: 'smooth', block: 'start'}); } }, 200); } return false;",
-                "Read the User Guide for CSV formatting and examples"
-              )
-            ),
-            helpText(
-              "Upload a CSV data file for the SR relationship.",
-              br(),
-              "Required columns: curve.id, stressor.label, stressor.x, units.x, response.label, response.y, units.y.",
-              br(),
-              "Optional columns: stressor.value, lower.limit, upper.limit, sd.",
-              br(),
-              "Each curve must have valid (non-NA) stressor.x and response.y values.",
-              br(),
-              "2 MB limit. Allowed type: .csv"
-            ),
-            downloadButton(ns("download_csv_template"), "Download CSV Template", class = "btn btn-info mb-2")
-          ))
-        ),
-        fluidRow(
-          column(6,
-            offset = 3,
-            actionButton(ns("submit_relationship"), "Submit Relationship", class = "btn btn-primary btn-block"),
-            # uiOutput(ns("error_files")),
-            tags$br(), tags$br(),
-            div(id = ns("submission_status"))
-          )
+      
+      # ── Submitter Info ──
+      fluidRow(
+        column(8, offset = 2, h4("1. About You", style = "border-bottom: 1px solid #ddd; padding-bottom: 5px;"))
+      ),
+      fluidRow(
+        column(4, offset = 2, textInput(ns("submitter_name"), "Full Name *", width = "100%")),
+        column(4, textInput(ns("submitter_email"), "Email Address *", width = "100%"))
+      ),
+      fluidRow(
+        column(8, offset = 2, textAreaInput(ns("submitter_notes"), "Notes for Reviewer", placeholder = "Describe why you are submitting this function...", height = "80px", width = "100%"))
+      ),
+      
+      # ── Core Metadata ──
+      fluidRow(
+        column(8, offset = 2, h4("2. Article & Function Metadata", style = "margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;"))
+      ),
+      fluidRow(
+        column(8, offset = 2, textInput(ns("title"), "Article Title *", placeholder = "Format: Author et al. Year: Function description", width = "100%"),
+        uiOutput(ns("title_warning"))
+        )
+      ),
+      fluidRow(
+        column(4, offset = 2, selectizeInput(ns("article_type"), "Article Type *", choices = NULL, options = list(create = TRUE), width = "100%")),
+        column(4, selectizeInput(ns("response"), "Response *", choices = NULL, options = list(create = TRUE), width = "100%"))
+      ),
+      
+      # ── CSV & PDF Uploads ──
+      fluidRow(
+        column(8, offset = 2, wellPanel(
+          style = "background-color: #f9f9f9; border-color: #ccc; margin-top: 15px; margin-bottom: 25px;",
+          strong("Data Uploads"),
+          div(id = ns("csv_wrapper"), customFileInput(ns("sr_csv_file"), "Optional: Stressor-Response Curve Data CSV", accept = ".csv")),
+          uiOutput(ns("csv_validation_status")),
+          downloadButton(ns("download_csv_template"), "Download CSV Template", class = "btn btn-info mb-2"),
+          hr(),
+          div(id = ns("pdf_wrapper"), customFileInput(ns("supporting_pdf"), "Optional: Supporting PDF", accept = c(".pdf", "application/pdf")))
+        ))
+      ),
+      
+      # ── Stressor & Species ──
+      fluidRow(
+        column(4, offset = 2, selectizeInput(ns("stressor_name"), "Stressor Name *", choices = NULL, options = list(create = TRUE), width = "100%")),
+        column(4, selectizeInput(ns("broad_stressor_name"), "Broad Stressor Name *", choices = NULL, options = list(create = TRUE), width = "100%"))
+      ),
+      fluidRow(
+        column(4, offset = 2, selectizeInput(ns("specific_stressor_metric"), "Specific Stressor Metric *", choices = NULL, options = list(create = TRUE), width = "100%")),
+        column(4, selectizeInput(ns("species_common_name"), "Species Common Name *", choices = NULL, multiple = TRUE, options = list(create = TRUE), width = "100%"))
+      ),
+      fluidRow(
+        column(4, offset = 2, selectizeInput(ns("latin_name"), "Latin Name *", choices = NULL, multiple = TRUE, options = list(create = TRUE), width = "100%")),
+        column(4, selectizeInput(ns("life_stages"), "Life Stages", choices = NULL, multiple = TRUE, options = list(create = TRUE), width = "100%"))
+      ),
+      
+      # ── Location & Descriptions ──
+      fluidRow(
+        column(4, offset = 2, selectizeInput(ns("location_country"), "Country *", choices = NULL, multiple = TRUE, options = list(create = TRUE), width = "100%")),
+        column(4, selectizeInput(ns("location_state_province"), "State / Province", choices = NULL, multiple = TRUE, options = list(create = TRUE), width = "100%"))
+      ),
+      fluidRow(
+        column(8, offset = 2, selectizeInput(ns("function_derivation"), "Function Derivation", choices = NULL, multiple = TRUE, options = list(create = TRUE), width = "100%"))
+      ),
+      fluidRow(
+        column(8, offset = 2, textAreaInput(ns("overview"), "Overview Description *", placeholder = "Describe the context of the study and how the function was derived...", height = "120px", width = "100%")),
+        column(8, offset = 2, textAreaInput(ns("transferability_of_function"), "Transferability of Function", placeholder = "In what geographic regions or system types is this function applicable? How generalizable is the function? This can be a high-level description and doesn't have to be comprehensive", height = "80px", width = "100%")),
+        column(8, offset = 2, textAreaInput(ns("srf_formula"), "SRF Formula (LaTeX allowed)", placeholder = "If this paper used a formula/equation to derive the function, describe it here. LaTeX formatting allowed. e.g., $$y = mx + b$$  OR  $$y = \\alpha e^{\\beta x}$$",  height = "80px", width = "100%"))
+      ),
+      
+      # ── Confidence Rankings ──
+      fluidRow(
+        column(8, offset = 2, h4("3. Confidence Rankings", style = "margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;"))
+      ),
+      fluidRow(
+        column(8, offset = 2, textInput(ns("conf_source"), "Data Source", placeholder = "e.g., High (Primary empirical data), Low (Proxy species)", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_shape"), "Shape of SR Function", placeholder = "e.g., High (Strong fit), Moderate (Wide confidence intervals)", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_variance"), "Data Variance/Consistency", placeholder = "e.g., High consistency across multiple years", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_applicability"), "Applicability to System", placeholder = "e.g., Specific to Puget Sound lowland streams", width = "100%")),
+        column(8, offset = 2, textInput(ns("conf_interactions"), "Potential Stressor Interactions", placeholder = "e.g., Synergistic effects noted with low dissolved oxygen", width = "100%"))
+      ),
+      
+      # ── Citations (Dynamic) ──
+      fluidRow(
+        column(8, offset = 2, h4("4. Citations *", style = "margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 5px;"))
+      ),
+      fluidRow(
+        column(8, offset = 2,
+          div(
+            id = ns("citation_block_1"),
+            style = "border: 1px solid #e3e3e3; padding: 15px; margin-bottom: 10px; border-radius: 5px; background-color: #fafafa;",
+            textAreaInput(ns("citation_text_1"), "Citation 1 (Text)", placeholder = "e.g., Smith et al. (2020)...", height = "70px", width = "100%"),
+            fluidRow(
+              column(6, textInput(ns("citation_title_1"), "Link Title", placeholder = "e.g., Baker et al. 1995", width = "100%")),
+              column(6, textInput(ns("citation_url_1"), "URL", placeholder = "https://doi.org/...", width = "100%"))
+            )
+          ),
+          tags$div(id = ns("extra_citations_container")) 
+        )
+      ),
+      fluidRow(
+        column(8, offset = 2, actionButton(ns("add_citation"), "Add Another Citation", icon = icon("plus"), class = "btn-sm", style = "margin-bottom: 30px;"))
+      ),
+      
+      # ── Submit Button ──
+      fluidRow(
+        column(8, offset = 2, align = "center",
+          actionButton(ns("submit_relationship"), "Submit Relationship for Review", class = "btn-primary btn-lg", style = "width: 100%; margin-bottom: 50px; font-weight: bold; background-color: #0073e6; border-color: #0073e6;")
         )
       )
     )
@@ -126,429 +141,239 @@ submit_relationship_ui <- function(id) {
 submit_relationship_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    db_conn <- pool
+    
+    # ── Formatting Guide Modal ──
+    observeEvent(input$show_readme, {
+      showModal(modalDialog(
+        title = "Formatting & Metadata Guide",
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        tagList(
+          h4("Metadata Consistency"),
+          p("To help maintain a clean database, please click the dropdown arrows first to see if your term already exists before typing a new one."),
+          hr(),
+          h4("Confidence Rankings"),
+          p("For each of the 5 confidence categories, please assign a rank of ", strong("High, Moderate, or Low"), ", along with a brief explanation if needed."),
+          tags$ul(
+            tags$li(strong("Data Source:"), " How well the data represents the stressor/response of interest."),
+            tags$li(strong("Shape:"), " How well-supported the functional curve form is."),
+            tags$li(strong("Variance:"), " Consistency and noise in the underlying dataset."),
+            tags$li(strong("Applicability:"), " Fit to the specific system in question."),
+            tags$li(strong("Interactions:"), " Potential influence of unmeasured interacting stressors.")
+          )
+        )
+      ))
+    })
 
-    # Reactive values to store the uploaded CSV and PDF data and their validation results
-    uploaded_csv_data <- reactiveVal(NULL)
-    uploaded_csv_validation <- reactiveVal(NULL)
-    uploaded_pdf_validation <- reactiveVal(NULL)
-    csv_active <- reactiveVal(FALSE)
-    pdf_active <- reactiveVal(FALSE)
+    # ── Populate Dropdowns from Live Database ──
+    observe({
+      get_distinct <- function(col) {
+        tryCatch({
+          res <- dbGetQuery(db_conn, sprintf("SELECT DISTINCT %s AS val FROM stressor_responses WHERE %s IS NOT NULL", col, col))
+          c("", sort(res$val[res$val != ""]))
+        }, error = function(e) "")
+      }
+      get_distinct_array <- function(col) {
+        tryCatch({
+          res <- dbGetQuery(db_conn, sprintf("SELECT DISTINCT unnest(%s) AS val FROM stressor_responses WHERE %s IS NOT NULL", col, col))
+          sort(res$val[res$val != ""])
+        }, error = function(e) character(0))
+      }
 
-    # Clear inline errors when user starts editing fields again
-    observeEvent(input$name,
-      {
-        output$error_name <- renderUI(NULL)
-      },
-      ignoreInit = TRUE
-    )
-    observeEvent(input$email,
-      {
-        output$error_email <- renderUI(NULL)
-      },
-      ignoreInit = TRUE
-    )
-    observeEvent(input$citation,
-      {
-        output$error_citation <- renderUI(NULL)
-      },
-      ignoreInit = TRUE
-    )
-    observeEvent(input$title,
-      {
-        output$error_title <- renderUI(NULL)
-      },
-      ignoreInit = TRUE
-    )
-    observeEvent(input$notes,
-      {
-        output$error_notes <- renderUI(NULL)
-      },
-      ignoreInit = TRUE
-    )
+      updateSelectizeInput(session, "article_type", choices = get_distinct("article_type"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "response", choices = get_distinct("response"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "stressor_name", choices = get_distinct("stressor_name"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "broad_stressor_name", choices = get_distinct("broad_stressor_name"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "specific_stressor_metric", choices = get_distinct("specific_stressor_metric"), server = FALSE, options = list(create = TRUE))
 
-    # Handle CSV file upload and validation
+      updateSelectizeInput(session, "species_common_name", choices = get_distinct_array("species_common_name"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "latin_name", choices = get_distinct_array("latin_name"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "life_stages", choices = get_distinct_array("life_stages"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "location_country", choices = get_distinct_array("location_country"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "location_state_province", choices = get_distinct_array("location_state_province"), server = FALSE, options = list(create = TRUE))
+      updateSelectizeInput(session, "function_derivation", choices = get_distinct_array("function_derivation"), server = FALSE, options = list(create = TRUE))
+    })
+
+    # ── Handle Citations ──
+    citation_count <- reactiveVal(1)
+    observeEvent(input$add_citation, {
+      new_count <- citation_count() + 1
+      citation_count(new_count)
+      insertUI(
+        selector = paste0("#", ns("extra_citations_container")),
+        where = "beforeEnd",
+        ui = div(
+          id = ns(paste0("citation_block_", new_count)),
+          style = "border: 1px solid #e3e3e3; padding: 15px; margin-bottom: 10px; border-radius: 5px; background-color: #fafafa;",
+          textAreaInput(ns(paste0("citation_text_", new_count)), paste("Citation", new_count, "(Text)"), height = "70px", width = "100%"),
+          fluidRow(
+            column(6, textInput(ns(paste0("citation_title_", new_count)), "Link Title", width = "100%")),
+            column(6, textInput(ns(paste0("citation_url_", new_count)), "URL", width = "100%"))
+          )
+        )
+      )
+    })
+
+    # ── CSV Validation ──
     observeEvent(input$sr_csv_file, {
       req(input$sr_csv_file)
-      csv_active(TRUE)
-      shinyjs::show("remove_csv")
-      file <- input$sr_csv_file
-
-      # Validate the uploaded CSV using the full Shiny file input object
-      validation_result <- tryCatch(
-        validate_csv_upload(file),
-        error = function(e) {
-          output$csv_validation_status <- renderUI({
-            tags$div(class = "alert alert-danger", paste("CSV validation error:", conditionMessage(e)))
-          })
-          list(valid = FALSE, message = conditionMessage(e))
-        }
-      )
-
-      if (isTRUE(validation_result$valid)) {
-        df <- validation_result$data
-        col_map <- validation_result$col_map
-
-        # Extract metadata for display
-        stressor_label <- if (!is.na(col_map$stressor_label)) {
-          unique(df[[col_map$stressor_label]])[1]
+      csv_validation_result <- validate_csv_upload(input$sr_csv_file)
+      output$csv_validation_status <- renderUI({
+        if (csv_validation_result$valid) {
+          HTML(create_alert_html("success", "CSV is valid", list(sprintf("Total rows: %d", nrow(csv_validation_result$data)))))
         } else {
-          "N/A"
+          err <- get_csv_error_message(csv_validation_result)
+          HTML(create_alert_html("error", err$message, err$issues))
         }
-
-        response_label <- if (!is.na(col_map$response_label)) {
-          unique(df[[col_map$response_label]])[1]
-        } else {
-          "N/A"
-        }
-
-        units_x <- if (!is.na(col_map$units_x)) {
-          unique(df[[col_map$units_x]])[1]
-        } else {
-          "N/A"
-        }
-
-        units_y <- if (!is.na(col_map$units_y)) {
-          unique(df[[col_map$units_y]])[1]
-        } else {
-          "N/A"
-        }
-
-        # Count unique curves
-        unique_curves <- length(unique(df[[col_map$curve_id]]))
-
-        details <- list(
-          sprintf("Total rows: %d", nrow(df)),
-          sprintf("Number of curves: %d", unique_curves),
-          sprintf("Stressor: %s (%s)", stressor_label, units_x),
-          sprintf("Response: %s (%s)", response_label, units_y)
-        )
-
-        if (length(validation_result$security_warnings) > 0) {
-          details <- c(
-            details,
-            "⚠️ Security Notice: Suspicious patterns detected and neutralized"
+      })
+    })
+        
+    # ── Live Duplicate Title Check ──
+    observeEvent(input$title, {
+      req(nchar(input$title) > 5)
+      
+      existing_titles <- dbGetQuery(db_conn, "SELECT title FROM stressor_responses WHERE title IS NOT NULL")$title
+      matches <- agrep(tolower(input$title), tolower(existing_titles), max.distance = 0.15, value = TRUE)
+      
+      output$title_warning <- renderUI({
+        if (length(matches) > 0) {
+          div(style = "color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; margin-top: -10px; margin-bottom: 15px;",
+              icon("exclamation-triangle"), 
+              strong(" Potential Duplicate:"), " A similarly titled article already exists in the database. Please verify before submitting."
           )
+        } else {
+          NULL
         }
-
-        uploaded_csv_data(df)
-        uploaded_csv_validation(validation_result)
-
-        output$csv_validation_status <- renderUI({
-          HTML(create_alert_html(
-            type = "success",
-            message = "CSV is valid and ready to submit",
-            details = details
-          ))
-        })
-
-        # Show security warnings in modal if present
-        if (length(validation_result$security_warnings) > 0) {
-          show_warning_modal(
-            session,
-            "🛡️ Security Notice",
-            "Your CSV file contained suspicious patterns that were automatically neutralized for safety.",
-            details = validation_result$security_warnings
-          )
-        }
-      } else {
-        uploaded_csv_data(NULL)
-        uploaded_csv_validation(NULL)
-        error_msg <- get_csv_error_message(validation_result)
-
-        output$csv_validation_status <- renderUI({
-          HTML(create_alert_html(
-            type = "error",
-            message = error_msg$message,
-            details = error_msg$issues
-          ))
-        })
-      }
+      })
     })
-
-    # Handle PDF file upload and validation (inline)
-    observeEvent(input$supporting_pdf, {
-      req(input$supporting_pdf)
-      pdf_active(TRUE)
-      shinyjs::show("remove_pdf")
-      file <- input$supporting_pdf
-
-      validation_result <- tryCatch(
-        validate_pdf_upload(file),
-        error = function(e) {
-          output$pdf_validation_status <- renderUI({
-            tags$div(class = "alert alert-danger", paste("PDF validation error:", conditionMessage(e)))
-          })
-          list(valid = FALSE, message = conditionMessage(e), issues = list(conditionMessage(e)))
-        }
-      )
-
-      if (isTRUE(validation_result$valid)) {
-        fpath <- file$datapath
-        file_size <- NA
-        if (!is.null(fpath) && file.exists(fpath)) {
-          file_size <- file.info(fpath)$size
-        }
-
-        details <- list(
-          sprintf("Filename: %s", file$name),
-          sprintf("Size (MB): %s", ifelse(is.na(file_size), "unknown", sprintf("%.3f", file_size / 1e6)))
-        )
-
-        uploaded_pdf_validation(validation_result)
-
-        output$pdf_validation_status <- renderUI({
-          HTML(create_alert_html(
-            type = "success",
-            message = "PDF is valid and ready to submit",
-            details = details
-          ))
-        })
-      } else {
-        uploaded_pdf_validation(NULL)
-        output$pdf_validation_status <- renderUI({
-          HTML(create_alert_html(
-            type = "error",
-            message = sprintf("PDF upload validation failed: %s", validation_result$message),
-            details = validation_result$issues
-          ))
-        })
-      }
-    })
-
-    # Handle removal of uploaded CSV
-    observeEvent(input$remove_csv, {
-      shinyjs::reset("csv_wrapper")
-      shinyjs::hide("remove_csv")
-      csv_active(FALSE)
-      uploaded_csv_data(NULL)
-      uploaded_csv_validation(NULL)
-      output$csv_validation_status <- renderUI(NULL)
-    })
-
-    # Handle removal of uploaded PDF
-    observeEvent(input$remove_pdf, {
-      shinyjs::reset("pdf_wrapper")
-      shinyjs::hide("remove_pdf")
-      pdf_active(FALSE)
-      uploaded_pdf_validation(NULL)
-      output$pdf_validation_status <- renderUI(NULL)
-    })
-
-    # Handle CSV template download
-    output$download_csv_template <- downloadHandler(
-      filename = function() {
-        paste0("SRF_template_", Sys.Date(), ".csv")
-      },
-      content = function(file) {
-        write_csv_template(file)
-      }
-    )
-
-    # Handle form submission (required fields + optional files)
+        
+    # ── Submit to Staging Database ──
     observeEvent(input$submit_relationship, {
-      # Clear all previous inline error messages
-      error_fields <- c(
-        "error_name", "error_email", "error_citation", "error_title", "error_notes"
-      )
-      for (ef in error_fields) {
-        output[[ef]] <- renderUI(NULL)
-      }
-
-      errors <- list()
-
-      # Required field checks
-      if (is.null(input$name) || trimws(input$name) == "") {
-        errors$name <- "Name is required."
-      }
-      if (is.null(input$email) || trimws(input$email) == "") {
-        errors$email <- "Email is required."
-      } else if (!grepl("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", trimws(input$email))) {
-        errors$email <- "Please enter a valid email address."
-      }
-      if (is.null(input$citation) || trimws(input$citation) == "") {
-        errors$citation <- "Citation is required."
-      }
-      if (is.null(input$title) || trimws(input$title) == "") {
-        errors$title <- "Title is required."
-      }
-      if (is.null(input$notes) || trimws(input$notes) == "") {
-        errors$notes <- "Notes are required."
-      }
-
-      # Render inline errors
-      inline_error_tag <- function(msg) {
-        tags$p(class = "text-danger small mt-1", style = "margin-bottom: 0;", msg)
-      }
-
-      if (!is.null(errors$name)) output$error_name <- renderUI(inline_error_tag(errors$name))
-      if (!is.null(errors$email)) output$error_email <- renderUI(inline_error_tag(errors$email))
-      if (!is.null(errors$citation)) output$error_citation <- renderUI(inline_error_tag(errors$citation))
-      if (!is.null(errors$title)) output$error_title <- renderUI(inline_error_tag(errors$title))
-      if (!is.null(errors$notes)) output$error_notes <- renderUI(inline_error_tag(errors$notes))
-
-      if (length(errors) > 0) {
-        show_error_modal(session, "Missing required fields", paste(errors, collapse = "<br>"))
+      # Basic required field checks
+      if (trimws(input$submitter_name) == "" || trimws(input$submitter_email) == "" || trimws(input$title) == "") {
+        show_error_modal(session, "Missing Fields", "Please fill out all required fields (Name, Email, and Title).")
         return()
       }
 
-      # Require that CSV and PDF (if provided) were validated on upload — reuse cached results
-      file_modal_errors <- character()
-
-      if (csv_active()) {
-        csv_cached <- uploaded_csv_validation()
-        if (is.null(csv_cached)) {
-          file_modal_errors <- c(file_modal_errors, "❌ CSV file has not been validated. Please either re-upload and validate your CSV file before submitting or remove it to submit your SR relationship without a CSV file.")
-        } else if (!isTRUE(csv_cached$valid)) {
-          emsg <- get_csv_error_message(csv_cached)
-          file_modal_errors <- c(file_modal_errors, paste("CSV validation failed:", emsg$message))
+      # Initialize empty CSV result
+      csv_res <- list(valid = FALSE, data = data.frame())
+        
+      # Only validate if a CSV was actually uploaded
+      if (!is.null(input$sr_csv_file)) {
+        csv_res <- validate_csv_upload(input$sr_csv_file)
+        if (!csv_res$valid) {
+          show_error_modal(session, "Invalid CSV", "Please fix your CSV file before submitting.")
+          return()
         }
       }
-
-      if (pdf_active()) {
-        pdf_cached <- uploaded_pdf_validation()
-        if (is.null(pdf_cached)) {
-          file_modal_errors <- c(file_modal_errors, "❌ PDF file has not been validated. Please either re-upload and validate your PDF file before submitting or remove it to submit your SR relationship without a PDF file.")
-        } else if (!isTRUE(pdf_cached$valid)) {
-          file_modal_errors <- c(file_modal_errors, paste("PDF validation failed:", pdf_cached$message))
-        }
-      }
-
-      if (length(file_modal_errors) > 0) {
-        show_error_modal(session, "Submission Not Sent: File Upload Errors", paste(file_modal_errors, collapse = "<br><br>"))
-        return()
-      }
-
-      # If files passed validation, copy them to a secure temp dir with sanitized names
-      saved_files <- list()
-      safe_name <- function(n) gsub("[^A-Za-z0-9_.-]", "_", n)
-
-      if (csv_active()) {
-        src <- input$sr_csv_file$datapath
-        dest <- file.path(tempdir(), paste0(format(Sys.time(), "%Y%m%d%H%M%S"), "_", safe_name(input$sr_csv_file$name)))
-        tryCatch(
-          {
-            file.copy(src, dest)
-            saved_files$csv <- dest
-          },
-          error = function(e) {
-            show_error_modal(session, "File Save Error", "Failed to save uploaded CSV file temporarily.")
-            return()
-          }
-        )
-      }
-
-      if (pdf_active()) {
-        src <- input$supporting_pdf$datapath
-        dest <- file.path(tempdir(), paste0(format(Sys.time(), "%Y%m%d%H%M%S"), "_", safe_name(input$supporting_pdf$name)))
-        tryCatch(
-          {
-            file.copy(src, dest)
-            saved_files$pdf <- dest
-          },
-          error = function(e) {
-            show_error_modal(session, "File Save Error", "Failed to save uploaded PDF file temporarily.")
-            return()
-          }
-        )
-      }
-
-      # At this point all validations passed.
-      # Show success and store metadata or temp paths if needed.
-      show_success_modal(session, "Submission Accepted", sprintf("Thank you %s — your submission titled '%s' was received.", input$name, input$title))
-
-      # Prepare to send notification email asynchronously
-      smtp_host <- Sys.getenv("SMTP_HOST")
-      smtp_port <- as.integer(Sys.getenv("SMTP_PORT"))
-      smtp_from <- Sys.getenv("SMTP_FROM")
-      admin_to <- Sys.getenv("ADMIN_EMAIL")
-
-      if (nzchar(smtp_host) && nzchar(smtp_from) && nzchar(admin_to)) {
-        if (.email_support) {
-          attachments <- character(0)
-          if (!is.null(saved_files$csv)) attachments <- c(attachments, saved_files$csv)
-          if (!is.null(saved_files$pdf)) attachments <- c(attachments, saved_files$pdf)
-
-          email_text <- paste0(
-            "New Relationship Submission\n\n",
-            "Name: ", input$name, "\n",
-            "Email: ", input$email, "\n",
-            "Title: ", input$title, "\n",
-            "Citation: ", input$citation, "\n\n",
-            "Notes:\n", input$notes, "\n\n",
-            "Attachments: ", paste(basename(attachments), collapse = ", ")
+      
+      # Compile citations to JSON
+      citations_list <- list()
+      for (i in 1:citation_count()) {
+        c_text <- input[[paste0("citation_text_", i)]]
+        if (!is.null(c_text) && trimws(c_text) != "") {
+          citations_list[[length(citations_list) + 1]] <- list(
+            text = trimws(c_text),
+            title = trimws(input[[paste0("citation_title_", i)]]),
+            url = trimws(input[[paste0("citation_url_", i)]])
           )
-
-          # Build emayili envelope
-          email_env <- emayili::envelope() %>%
-            emayili::from(smtp_from) %>%
-            emayili::to(admin_to) %>%
-            emayili::subject(paste("New relationship submission:", input$title)) %>%
-            emayili::text(email_text)
-
-          # Attach files if present
-          if (length(attachments) > 0) {
-            for (att in attachments) {
-              email_env <- email_env %>% emayili::attachment(att)
-            }
-          }
-
-          promises::future_promise(
-            {
-              tryCatch(
-                {
-                  smtp <- emayili::server(host = smtp_host, port = smtp_port, helo = "noaa.gov")
-                  smtp(email_env)
-                },
-                error = function(e) {
-                  stop(sprintf("SMTP send error: %s", conditionMessage(e)))
-                }
-              )
-            },
-            seed = TRUE
-          ) %...>%
-            (function(res) {
-              message(sprintf("[EMAIL SENT] Submission notification sent"))
-              invisible(NULL)
-            }) %...!%
-            (function(e) {
-              err_msg <- conditionMessage(e)
-              message(sprintf("[EMAIL ERROR] Failed to send submission email: %s", err_msg))
-              try(
-                {
-                  show_error_modal(session, "Email Send Failed", sprintf("Notification email failed to send: %s", err_msg))
-                },
-                silent = TRUE
-              )
-              invisible(NULL)
-            })
-        } else {
-          message("[EMAIL SKIPPED] required packages (future/promises/emayili) not installed; not sending submission email.")
         }
-      } else {
-        message("[EMAIL SKIPPED] SMTP config missing; not sending submission email.")
+      }
+      citation_json <- if (length(citations_list) > 0) jsonlite::toJSON(citations_list, auto_unbox = TRUE) else "[]"
+
+      # Array Helper
+      to_pg_array <- function(val) {
+        if (is.null(val) || length(val) == 0) return(NA_character_)
+        parts <- unlist(lapply(val, function(x) trimws(strsplit(x, ",")[[1]])))
+        parts <- parts[parts != ""]
+        if (length(parts) == 0) return(NA_character_)
+        paste0("{", paste(sprintf('"%s"', gsub('"', '\\"', parts, fixed = TRUE)), collapse = ","), "}")
       }
 
-      # Clear cached upload state and reset the form UI after successful submission
-      uploaded_csv_data(NULL)
-      uploaded_csv_validation(NULL)
-      csv_active(FALSE)
-      uploaded_pdf_validation(NULL)
-      pdf_active(FALSE)
-      output$csv_validation_status <- renderUI(NULL)
-      output$pdf_validation_status <- renderUI(NULL)
-      shinyjs::hide("remove_csv")
-      shinyjs::hide("remove_pdf")
-      reset("submit_relationship_form")
+      # Optional PDF processing
+      pdf_binary <- NULL
+      pdf_name <- NA_character_
+      if (!is.null(input$supporting_pdf)) {
+        pdf_path <- input$supporting_pdf$datapath
+        if (file.exists(pdf_path)) {
+          pdf_binary <- readBin(pdf_path, "raw", file.info(pdf_path)$size)
+          pdf_name <- input$supporting_pdf$name
+        }
+      }
 
-      # Log minimal info (avoid logging raw file contents)
-      message(sprintf(
-        "[RELATIONSHIP SUBMIT] Name=%s, Email=%s, Title=%s, CSV=%s, PDF=%s",
-        input$name, input$email, input$title,
-        ifelse(!is.null(saved_files$csv), saved_files$csv, ""),
-        ifelse(!is.null(saved_files$pdf), saved_files$pdf, "")
-      ))
+      tryCatch({
+        # 1. Insert into staging_submissions RETURNING staging_id
+        query <- "
+          INSERT INTO staging_submissions (
+            submitter_name, submitter_email, submitter_notes,
+            article_type, title, stressor_name, broad_stressor_name, specific_stressor_metric,
+            response, srf_formula, species_common_name, latin_name, life_stages,
+            location_country, location_state_province, overview, function_derivation, transferability_of_function,
+            conf_source, conf_shape, conf_variance, conf_applicability, conf_interactions,
+            citations, supporting_pdf, pdf_filename
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24::jsonb, $25, $26
+          ) RETURNING staging_id;"
+          
+        res <- dbGetQuery(db_conn, query, params = list(
+          input$submitter_name, input$submitter_email, input$submitter_notes,
+          input$article_type, input$title, input$stressor_name, input$broad_stressor_name, input$specific_stressor_metric,
+          input$response, input$srf_formula, to_pg_array(input$species_common_name), to_pg_array(input$latin_name), to_pg_array(input$life_stages),
+          to_pg_array(input$location_country), to_pg_array(input$location_state_province), input$overview, to_pg_array(input$function_derivation), input$transferability_of_function,
+          input$conf_source, input$conf_shape, input$conf_variance, input$conf_applicability, input$conf_interactions,
+          citation_json, 
+          list(pdf_binary),
+          pdf_name
+        ))
+        
+        new_staging_id <- res$staging_id
+
+        # 2. Insert into staging_csv_data (Only if a valid CSV was provided)
+        if (csv_res$valid && nrow(csv_res$data) > 0) {
+          df_csv <- csv_res$data
+          df_csv$staging_id <- new_staging_id
+          df_csv$row_index <- 1:nrow(df_csv)
+          names(df_csv) <- gsub("\\.", "_", names(df_csv))
+          dbAppendTable(db_conn, "staging_csv_data", df_csv)
+        }
+
+        show_success_modal(session, "Submission Successful", "Thank you! Your relationship has been added to our staging queue for administrative review.")
+        shinyjs::reset(ns("submit_relationship_form"))
+        
+        # ── Send Lightweight Email Notification ──
+        smtp_host <- Sys.getenv("SMTP_HOST")
+        smtp_port <- as.integer(Sys.getenv("SMTP_PORT"))
+        smtp_from <- Sys.getenv("SMTP_FROM")
+        admin_to <- Sys.getenv("ADMIN_EMAIL")
+
+        if (nzchar(smtp_host) && nzchar(smtp_from) && nzchar(admin_to)) {
+          if (requireNamespace("emayili", quietly = TRUE) && requireNamespace("promises", quietly = TRUE)) {
+            
+            email_text <- paste0(
+              "A new stressor-response relationship has been submitted to the Staging Queue.\n\n",
+              "Submitter: ", input$submitter_name, " (", input$submitter_email, ")\n",
+              "Title: ", input$title, "\n\n",
+              "Please log into the Salmonid e-Library and check the Admin Review Queue to approve or reject this submission."
+            )
+
+            email_env <- emayili::envelope() %>%
+              emayili::from(smtp_from) %>%
+              emayili::to(admin_to) %>%
+              emayili::subject("New SRF Submission - Admin Review Required") %>%
+              emayili::text(email_text)
+
+            promises::future_promise({
+              smtp <- emayili::server(host = smtp_host, port = smtp_port, helo = "noaa.gov")
+              smtp(email_env)
+            }, seed = TRUE)
+          }
+        }
+      }, error = function(e) {
+        show_error_modal(session, "Database Error", paste("Failed to save submission:", e$message))
+      })
     })
   })
 }
-
 # nolint end
