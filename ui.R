@@ -193,9 +193,10 @@ ui <- navbarPage(
 
           div(
             style = "width: 100%;",
-            downloadButton("download_csv", "Confirm Download", class = "btn btn-success text-white btn-block")
+            actionButton("trigger_download", "Confirm Download", class = "btn btn-success text-white btn-block")
           )
         ),
+        shinyjs::hidden(downloadButton("download_csv", "Hidden Download")),
 
         # component for displaying the papers
         fluidRow(
