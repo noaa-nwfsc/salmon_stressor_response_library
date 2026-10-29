@@ -174,29 +174,13 @@ ui <- navbarPage(
             actionButton("next_page_top", "Next →", class = "btn-primary btn-sm")
           )
         ),
-        dropdownButton(
-          circle = FALSE,
-          status = "primary",
-          label = "Download",
-          icon = icon("download"),
-          tooltip = tooltipOptions(title = "Choose what to download"),
-
-          radioButtons("download_option",
-            label = NULL,
-            choices = c(
-              "Filtered records" = "filtered",
-              "Selected records" = "selected",
-              "Entire database" = "all"
-            ),
-            selected = "filtered"
-          ),
-
-          div(
-            style = "width: 100%;",
-            actionButton("trigger_download", "Confirm Download", class = "btn btn-success text-white btn-block")
-          )
+        
+        actionButton(
+          "open_download_modal", 
+          "Download Data", 
+          icon = icon("download"), 
+          class = "btn-primary"
         ),
-        shinyjs::hidden(downloadButton("download_csv", "Hidden Download")),
 
         # component for displaying the papers
         fluidRow(
