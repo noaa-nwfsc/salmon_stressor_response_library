@@ -171,7 +171,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
         
         uploader_id_df <- dbGetQuery(conn, "SELECT user_id FROM users WHERE name = $1 LIMIT 1", params = list(db_username))
         
-        # Strict check to block unauthorized users
         if (nrow(uploader_id_df) == 0) {
           showNotification(
             paste("Upload blocked: Your username (", db_username, ") is not registered in the database."), 
@@ -185,6 +184,10 @@ bulk_upload_server <- function(id, db_conn, current_user) {
         
         dbBegin(conn)
         
+        # ── Fetch current max article_id since column is not SERIAL ──────────
+        max_id_query <- "SELECT COALESCE(MAX(article_id), 0) AS max_id FROM stressor_responses;"
+        current_max_id <- as.integer(dbGetQuery(conn, max_id_query)$max_id[1])
+        
         array_cols <- c("species_common_name", "latin_name", "life_stages", 
                         "activity", "season", "location_country", 
                         "location_state_province", "location_watershed_lab", 
@@ -194,13 +197,19 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           row_meta <- valid_meta[i, ]
           t_id <- row_meta$temp_id
           
-          # Remove staging helper columns
+          # Increment ID for this new relationship
+          current_max_id <- current_max_id + 1L
+          new_article_id <- current_max_id
+          
+          # Drop staging helper columns
           cols_to_remove <- c("temp_id", "is_duplicate", "data_rows_found")
           insert_meta <- row_meta[, !names(row_meta) %in% cols_to_remove, drop = FALSE]
           
-          insert_meta$user_id <- actual_user_id
+          # Assign both explicit IDs
+          insert_meta$article_id <- as.integer(new_article_id)
+          insert_meta$user_id <- as.integer(actual_user_id)
           
-          # Parse comma-separated Excel strings into PostgreSQL arrays
+          # Format text arrays
           for (col in array_cols) {
             if (col %in% names(insert_meta)) {
               val <- insert_meta[[col]]
@@ -208,50 +217,62 @@ bulk_upload_server <- function(id, db_conn, current_user) {
                 insert_meta[[col]] <- "{}" 
               } else {
                 parts <- trimws(strsplit(as.character(val), ",")[[1]])
+                parts <- gsub('"', '\\"', parts, fixed = TRUE)
                 insert_meta[[col]] <- paste0('{', paste(sprintf('"%s"', parts), collapse = ","), '}')
               }
             }
           }
           
+          # Format JSON citations
           if ("citations" %in% names(insert_meta)) {
-             cit_val <- insert_meta[["citations"]]
-             if (is.na(cit_val) || trimws(cit_val) == "") {
-                 insert_meta[["citations"]] <- "[]"
-             }
+            cit_val <- insert_meta[["citations"]]
+            if (is.na(cit_val) || trimws(cit_val) == "") {
+              insert_meta[["citations"]] <- "[]"
+            }
           }
           
-          # ── EXPLICIT METADATA INSERT ──
-          # Create dynamic SQL insert statement
-          meta_col_names <- paste(names(insert_meta), collapse = ", ")
-          meta_placeholders <- paste0("$", seq_along(insert_meta))
+          # Build explicit placeholders with casts
+          col_names <- names(insert_meta)
+          placeholders <- sapply(seq_along(col_names), function(idx) {
+            c_name <- col_names[idx]
+            if (c_name %in% array_cols) {
+              paste0("$", idx, "::text[]")
+            } else if (c_name %in% c("citations", "revision_log")) {
+              paste0("$", idx, "::jsonb")
+            } else if (c_name %in% c("user_id", "article_id")) {
+              paste0("$", idx, "::integer")
+            } else {
+              paste0("$", idx)
+            }
+          })
           
-          meta_query <- sprintf(
-            "INSERT INTO stressor_responses (%s) VALUES (%s) RETURNING article_id;",
-            meta_col_names,
-            paste(meta_placeholders, collapse = ", ")
+          meta_sql <- sprintf(
+            "INSERT INTO stressor_responses (%s) VALUES (%s);",
+            paste(col_names, collapse = ", "),
+            paste(placeholders, collapse = ", ")
           )
           
-          # Execute and capture the auto-generated article_id instantly
-          new_article_id <- dbGetQuery(conn, meta_query, params = unname(as.list(insert_meta)))$article_id
+          meta_params <- lapply(insert_meta, function(x) if (is.na(x)) NULL else x)
+          dbExecute(conn, meta_sql, params = unname(meta_params))
           
-          # ── PREPARE CURVE DATA ──
-          subset_curve <- curve_data[curve_data$temp_id == t_id, ]
-          subset_curve$article_id <- new_article_id
-          subset_curve$row_index <- 1:nrow(subset_curve)
+          # Process curve data rows
+          subset_curve <- curve_data[curve_data$temp_id == t_id, , drop = FALSE]
+          subset_curve$article_id <- as.integer(new_article_id)
+          subset_curve$row_index <- as.integer(1:nrow(subset_curve))
           subset_curve$temp_id <- NULL
           
-          # ── EXPLICIT CURVE DATA INSERT ──
-          curve_col_names <- paste(names(subset_curve), collapse = ", ")
-          curve_placeholders <- paste0("$", seq_along(subset_curve))
-          
-          curve_query <- sprintf(
+          curve_cols <- names(subset_curve)
+          curve_placeholders <- paste0("$", seq_along(curve_cols))
+          curve_sql <- sprintf(
             "INSERT INTO csv_data (%s) VALUES (%s);",
-            curve_col_names,
+            paste(curve_cols, collapse = ", "),
             paste(curve_placeholders, collapse = ", ")
           )
           
-          # dbExecute automatically vectorizes the insert for all rows in the curve dataframe
-          dbExecute(conn, curve_query, params = unname(as.list(subset_curve)))
+          for (r in 1:nrow(subset_curve)) {
+            row_vals <- lapply(subset_curve[r, ], function(x) if (is.na(x)) NULL else x)
+            dbExecute(conn, curve_sql, params = unname(row_vals))
+          }
         }
         
         dbCommit(conn)
