@@ -161,6 +161,31 @@ bulk_upload_server <- function(id, db_conn, current_user) {
       on.exit(pool::poolReturn(conn), add = TRUE)
       
       tryCatch({
+        # ── NEW: Lookup user_id from the users table ──
+        # Convert "first.last" to "flast" (e.g., "paxton.calhoun" -> "pcalhoun")
+        user_parts <- strsplit(current_user, "\\.")[[1]]
+        if (length(user_parts) == 2) {
+          db_username <- paste0(substr(user_parts[1], 1, 1), user_parts[2])
+        } else {
+          db_username <- current_user # Fallback just in case
+        }
+        
+        # Query the database for the matching integer ID
+        uploader_id_df <- dbGetQuery(conn, "SELECT user_id FROM users WHERE name = $1 LIMIT 1", params = list(db_username))
+        
+        # ── Strict check to block unauthorized/unknown users ──
+        if (nrow(uploader_id_df) == 0) {
+          showNotification(
+            paste("Upload blocked: Your username (", db_username, ") is not registered in the database."), 
+            type = "error", 
+            duration = 10
+          )
+          return() # Exit immediately, stopping the upload
+        }
+        
+        # Assign the confirmed ID
+        actual_user_id <- uploader_id_df$user_id[1]
+        
         dbBegin(conn)
         
         # All columns required as text[] (_text) by the schema
@@ -177,7 +202,8 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           cols_to_remove <- c("temp_id", "is_duplicate", "data_rows_found")
           insert_meta <- row_meta[, !names(row_meta) %in% cols_to_remove, drop = FALSE]
           
-          insert_meta$user_id <- current_user
+          # Assign the retrieved integer ID
+          insert_meta$user_id <- actual_user_id
           
           # Parse comma-separated Excel strings into PostgreSQL arrays
           for (col in array_cols) {
