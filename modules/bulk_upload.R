@@ -142,7 +142,7 @@ bulk_upload_server <- function(id, db_conn, current_user) {
         )
     })
     
-    # ── 4. Commit to Database ────────────────────────────────────────────────
+# ── 4. Commit to Database ────────────────────────────────────────────────
     observeEvent(input$commit_bulk, {
       req(staged_data())
       meta <- staged_data()$meta
@@ -161,34 +161,30 @@ bulk_upload_server <- function(id, db_conn, current_user) {
       on.exit(pool::poolReturn(conn), add = TRUE)
       
       tryCatch({
-        # ── NEW: Lookup user_id from the users table ──
-        # Convert "first.last" to "flast" (e.g., "paxton.calhoun" -> "pcalhoun")
+        # Lookup user_id from the users table
         user_parts <- strsplit(current_user, "\\.")[[1]]
         if (length(user_parts) == 2) {
           db_username <- paste0(substr(user_parts[1], 1, 1), user_parts[2])
         } else {
-          db_username <- current_user # Fallback just in case
+          db_username <- current_user 
         }
         
-        # Query the database for the matching integer ID
         uploader_id_df <- dbGetQuery(conn, "SELECT user_id FROM users WHERE name = $1 LIMIT 1", params = list(db_username))
         
-        # ── Strict check to block unauthorized/unknown users ──
+        # Strict check to block unauthorized users
         if (nrow(uploader_id_df) == 0) {
           showNotification(
             paste("Upload blocked: Your username (", db_username, ") is not registered in the database."), 
             type = "error", 
             duration = 10
           )
-          return() # Exit immediately, stopping the upload
+          return() 
         }
         
-        # Assign the confirmed ID
         actual_user_id <- uploader_id_df$user_id[1]
         
         dbBegin(conn)
         
-        # All columns required as text[] (_text) by the schema
         array_cols <- c("species_common_name", "latin_name", "life_stages", 
                         "activity", "season", "location_country", 
                         "location_state_province", "location_watershed_lab", 
@@ -202,7 +198,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           cols_to_remove <- c("temp_id", "is_duplicate", "data_rows_found")
           insert_meta <- row_meta[, !names(row_meta) %in% cols_to_remove, drop = FALSE]
           
-          # Assign the retrieved integer ID
           insert_meta$user_id <- actual_user_id
           
           # Parse comma-separated Excel strings into PostgreSQL arrays
@@ -225,19 +220,38 @@ bulk_upload_server <- function(id, db_conn, current_user) {
              }
           }
           
-          dbAppendTable(conn, "stressor_responses", insert_meta)
+          # ── EXPLICIT METADATA INSERT ──
+          # Create dynamic SQL insert statement
+          meta_col_names <- paste(names(insert_meta), collapse = ", ")
+          meta_placeholders <- paste0("$", seq_along(insert_meta))
           
-          # Fetch the auto-generated article_id based on title
-          new_id_query <- "SELECT article_id FROM stressor_responses WHERE title = $1 ORDER BY article_id DESC LIMIT 1"
-          new_article_id <- dbGetQuery(conn, new_id_query, params = list(insert_meta$title))$article_id
+          meta_query <- sprintf(
+            "INSERT INTO stressor_responses (%s) VALUES (%s) RETURNING article_id;",
+            meta_col_names,
+            paste(meta_placeholders, collapse = ", ")
+          )
           
-          # Isolate curve data for this relationship
+          # Execute and capture the auto-generated article_id instantly
+          new_article_id <- dbGetQuery(conn, meta_query, params = unname(as.list(insert_meta)))$article_id
+          
+          # ── PREPARE CURVE DATA ──
           subset_curve <- curve_data[curve_data$temp_id == t_id, ]
           subset_curve$article_id <- new_article_id
           subset_curve$row_index <- 1:nrow(subset_curve)
           subset_curve$temp_id <- NULL
           
-          dbAppendTable(conn, "csv_data", subset_curve)
+          # ── EXPLICIT CURVE DATA INSERT ──
+          curve_col_names <- paste(names(subset_curve), collapse = ", ")
+          curve_placeholders <- paste0("$", seq_along(subset_curve))
+          
+          curve_query <- sprintf(
+            "INSERT INTO csv_data (%s) VALUES (%s);",
+            curve_col_names,
+            paste(curve_placeholders, collapse = ", ")
+          )
+          
+          # dbExecute automatically vectorizes the insert for all rows in the curve dataframe
+          dbExecute(conn, curve_query, params = unname(as.list(subset_curve)))
         }
         
         dbCommit(conn)
