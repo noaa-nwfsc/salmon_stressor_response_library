@@ -48,6 +48,29 @@ overlay_plot_server <- function(id, selected_ids_reactive, db_conn, full_metadat
       df_csv
     })
     
+    # ── Unit Mismatch Warning Modal ──
+    observeEvent(plot_data(), {
+      df <- plot_data()
+      req(nrow(df) > 0)
+      
+      # Extract unique units, ignoring blanks or NAs
+      unique_x <- unique(toupper(trimws(df$units_x[!is.na(df$units_x) & df$units_x != ""])))
+      unique_y <- unique(toupper(trimws(df$units_y[!is.na(df$units_y) & df$units_y != ""])))
+      
+      if (length(unique_x) > 1 || length(unique_y) > 1) {
+        showModal(modalDialog(
+          title = tagList(icon("triangle-exclamation", style="color:#d9534f;"), " Unit Mismatch Warning"),
+          p("You are overlaying curves that use different units of measurement. The plot will still render, but caution is advised as the axes represent different underlying scales."),
+          hr(),
+          p(strong("X-Axis Units Detected: "), paste(unique_x, collapse = ", ")),
+          p(strong("Y-Axis Units Detected: "), paste(unique_y, collapse = ", ")),
+          size = "m",
+          easyClose = TRUE,
+          footer = modalButton("Understood")
+        ))
+      }
+    })
+    
     # 2. Build the Interactive Plotly Graph
     output$comparison_chart <- renderPlotly({
       df <- plot_data()
@@ -89,7 +112,7 @@ overlay_plot_server <- function(id, selected_ids_reactive, db_conn, full_metadat
       p
     })
     
-    # 3. Build the Summary Cards (UPDATED TO SALMONID SCHEMA)
+    # 3. Build the Summary Cards (EXPANDED METADATA)
     output$selected_summary_cards <- renderUI({
       ids <- selected_ids_reactive()
       req(length(ids) > 0)
@@ -100,18 +123,35 @@ overlay_plot_server <- function(id, selected_ids_reactive, db_conn, full_metadat
       cards <- lapply(1:nrow(selected_meta), function(i) {
         row <- selected_meta[i, ]
         
+        # Format location nicely
+        loc_str <- paste(c(row$location_state_province, row$location_country), collapse = ", ")
+        if(loc_str == "NA, NA" || loc_str == "") loc_str <- "Not specified"
+        
         div(
           style = "border: 1px solid #d1d8e0; border-left: 4px solid #3182ce; border-radius: 5px; padding: 15px; margin-bottom: 15px; background-color: #f8fafc;",
+          
+          # Title Row
           fluidRow(
-            column(12, h5(strong(paste0(row$article_id, ". ", row$title)), style = "margin-top: 0; color: #2b6cb0;")),
-            column(4, p(strong("Species: "), row$species_common_name, style = "margin-bottom: 5px;")),
-            column(4, p(strong("Stressor: "), row$stressor_name, style = "margin-bottom: 5px;")),
-            column(4, p(strong("Response: "), row$response, style = "margin-bottom: 5px;"))
+            column(12, h5(strong(paste0(row$article_id, ". ", row$title)), style = "margin-top: 0; color: #2b6cb0;"))
+          ),
+          
+          # Expanded Metadata Rows
+          fluidRow(
+            column(3, p(strong("Species: "), row$species_common_name, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Life Stage: "), row$life_stages, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Stressor: "), row$stressor_name, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Specific Metric: "), row$specific_stressor_metric, style = "margin-bottom: 5px;"))
+          ),
+          fluidRow(
+            column(3, p(strong("Response: "), row$response, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Function Type: "), row$function_derivation, style = "margin-bottom: 5px;")),
+            column(6, p(strong("Location: "), loc_str, style = "margin-bottom: 5px;"))
           )
         )
       })
       do.call(tagList, cards)
     })
+    
   })
 }
 # nolint end
