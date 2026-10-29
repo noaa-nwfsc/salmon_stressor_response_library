@@ -97,7 +97,7 @@ about_us <- function(id) {
                 tags$a(href = "https://doi.org/10.1038/s42003-021-01734-w", "Read Paper", target = "_blank")
               ),
               tags$li(
-                "John McMillan's Thermal Stress Database — ",
+                "John McMillan's Wild-Hatchery Salmon Interactions — ",
                 tags$a(href = "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Ffme.12643&file=fme12643-sup-0002-AppendixS2.html", "Explore Database", target = "_blank"), " | ",
                 tags$a(href = "https://doi.org/10.1111/fme.12643", "Read Paper", target = "_blank")
               )
