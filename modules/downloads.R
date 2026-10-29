@@ -53,6 +53,10 @@ setup_download_csv <- function(output, filtered_data, paginated_data, db, input,
     df
   }
 
+  observeEvent(input$trigger_download, {
+      session$sendCustomMessage("download_csv", list(id = "download_csv"))
+    })
+  
 # 2. Build the Multi-Sheet Excel Download
   output$download_csv <- downloadHandler(
     filename = function() {
