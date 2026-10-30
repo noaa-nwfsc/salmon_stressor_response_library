@@ -50,7 +50,7 @@ bulk_upload_server <- function(id, db_conn, current_user) {
             "This number links the two sheets. If a relationship has temp_id = 1 in the Metadata sheet, all of its curve points must also have temp_id = 1 in the Curve_Data sheet.",
             'Must be formatted as a JSON array of objects. Example: [{"title":"Bjornn & Reiser 1991","url":"https://www.for.gov.bc.ca/hfd/LIBRARY/FFIP/Bjornn_TC1991.pdf","text":"Bjornn, T. C., & Reiser, D. W. (1991). Habitat requirements of salmonids in streams. In American Fisheries Society Special Publication (Vol. 19, pp. 83–138)."}] or for multiple citations [{"title":"Rempel et al. 2012","url":"https://publications.gc.ca/collections/collection_2014/mpo-dfo/Fs97-6-2991-eng.pdf","text":"Rempel, L. L. , Healey, K. , & Lewis, F. J. A. (2012). Lower Fraser River juvenile fish habitat suitability criteria. Ecosystem Management Branch, Fisheries and Oceans Canada."}]',
             "No special database syntax needed. Simply type values separated by commas. Example: Chinook Salmon, Coho Salmon",
-            "Accepts standard text or LaTeX equations. Example: S = \\frac{1}{1 + e^{-(\\alpha + \\beta T)}}",
+            "Accepts standard text or LaTeX equations. If you want the equation to appear in LaTeX, wrap the equation in double dollar signs. Example: $$S = \\frac{1}{1 + e^{-(\\alpha + \\beta T)}}$$",
             "Leave cells blank for missing values. Do not type 'NA' or 'NULL'."
           ),
           stringsAsFactors = FALSE
