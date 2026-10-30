@@ -19,6 +19,7 @@ source("modules/submit_relationship.R", local = TRUE)
 source("modules/overlay_plot.R", local = TRUE)
 source("modules/edit_article.R", local = TRUE)
 source("modules/admin_review.R", local = TRUE)
+source("modules/bulk_upload.R", local = TRUE)
 
 server <- function(input, output, session) {
   db <- pool
@@ -182,7 +183,7 @@ server <- function(input, output, session) {
   )
   
 # ── Admin Upload Tab (Protected by Posit Connect) ────────────────────────
-  admin_users <- c("aimee.fullerton", "paxton.calhoun", "morgan.bond") 
+  admin_users <- c("aimee.fullerton", "paxton.calhoun", "morgan.bond")
 
   observe({
     req(session$user) 
@@ -193,7 +194,7 @@ server <- function(input, output, session) {
       # 1. Insert the Admin Upload Tab
       insertTab(
         inputId = "main_navbar", 
-        target = "submit_relationship", # Matches the 'value' of the tab in ui.R
+        target = "submit_relationship", 
         position = "after",
         tabPanel(
           title = "Admin Upload",
@@ -204,7 +205,7 @@ server <- function(input, output, session) {
       )
       upload_server("secure_admin_upload", db_conn = db, current_user = session$user)
       
-      # 2. Insert the new Admin Review Queue Tab
+      # 2. Insert the Admin Review Queue Tab
       insertTab(
         inputId = "main_navbar",
         target = "admin_upload_tab",
@@ -217,6 +218,20 @@ server <- function(input, output, session) {
         )
       )
       admin_review_server("secure_admin_review", db_conn = db)
+      
+      # 3. Insert the Bulk Upload Tab
+      insertTab(
+        inputId = "main_navbar",
+        target = "admin_review_tab", 
+        position = "after",
+        tabPanel(
+          title = "Bulk Upload",
+          value = "bulk_upload_tab",
+          icon = icon("file-excel"),
+          bulk_upload_ui("secure_bulk_upload")
+        )
+      )
+      bulk_upload_server("secure_bulk_upload", db_conn = db, current_user = session$user)
     }
   })
       
