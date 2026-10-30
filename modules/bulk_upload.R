@@ -25,7 +25,7 @@ bulk_upload_server <- function(id, db_conn, current_user) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    # ── 1. Generate Blank Template ───────────────────────────────────────────
+   # ── 1. Generate Blank Template ───────────────────────────────────────────
     output$download_template <- downloadHandler(
       filename = function() {
         paste0("Bulk_Upload_Template_", Sys.Date(), ".xlsx")
@@ -33,7 +33,35 @@ bulk_upload_server <- function(id, db_conn, current_user) {
       content = function(file) {
         wb <- createWorkbook()
         
-        # Metadata Sheet (Matches Schema Exactly)
+        # 1. Instructions / Readme Sheet
+        addWorksheet(wb, "Instructions")
+        
+        instructions_df <- data.frame(
+          Field_or_Topic = c(
+            "General Rules",
+            "temp_id (Crucial)",
+            "citations",
+            "Array Columns (Species, Location, etc.)",
+            "srf_formula",
+            "Missing Data"
+          ),
+          Formatting_Guide = c(
+            "Fill out both 'Metadata' and 'Curve_Data' sheets. Do NOT alter or delete the column headers.",
+            "This number links the two sheets. If a relationship has temp_id = 1 in the Metadata sheet, all of its curve points must also have temp_id = 1 in the Curve_Data sheet.",
+            "Must be formatted as a JSON array of objects. Example: [{\"text\": \"Smith et al. 2023\"}] or [{\"text\": \"Citation 1\"}, {\"text\": \"Citation 2\"}]",
+            "No special database syntax needed. Simply type values separated by commas. Example: Chinook Salmon, Coho Salmon",
+            "Accepts standard text or LaTeX equations. Example: S = \\frac{1}{1 + e^{-(\\alpha + \\beta T)}}",
+            "Leave cells blank for missing values. Do not type 'NA' or 'NULL'."
+          ),
+          stringsAsFactors = FALSE
+        )
+        
+        # Write instructions and style them for readability
+        header_style <- createStyle(textDecoration = "bold", bgFill = "#DCE6F1", border = "Bottom")
+        writeData(wb, "Instructions", instructions_df, headerStyle = header_style)
+        setColWidths(wb, "Instructions", cols = 1:2, widths = c(35, 120))
+        
+        # 2. Metadata Sheet
         addWorksheet(wb, "Metadata")
         meta_cols <- c("temp_id", "title", "citations", "article_type", 
                        "response", "broad_stressor_name", "stressor_name", "specific_stressor_metric",
@@ -45,7 +73,7 @@ bulk_upload_server <- function(id, db_conn, current_user) {
                        "conf_variance", "conf_applicability", "conf_interactions")
         writeData(wb, "Metadata", matrix(ncol = length(meta_cols), nrow = 0, dimnames = list(NULL, meta_cols)))
         
-        # Curve Data Sheet
+        # 3. Curve Data Sheet
         addWorksheet(wb, "Curve_Data")
         data_cols <- c("temp_id", "curve_id", "stressor_label", "stressor_x", "units_x", 
                        "response_label", "response_y", "units_y", "stressor_value", 
@@ -55,7 +83,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
         saveWorkbook(wb, file, overwrite = TRUE)
       }
     )
-    
     # ── 2. Read and Validate Uploaded File ───────────────────────────────────
     staged_data <- reactiveVal(NULL)
     
@@ -78,7 +105,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           return()
         }
         
-        # Duplicate Checking Logic using title
         existing_titles <- dbGetQuery(db_conn, "SELECT title FROM stressor_responses")$title
         meta_df$is_duplicate <- sapply(meta_df$title, function(t) {
           if (is.na(t) || t == "") return(FALSE)
@@ -113,6 +139,12 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           column(4, div(class = "alert alert-warning", paste(num_dupes, "Potential Duplicates Found"))),
           column(4, div(class = "alert alert-danger", paste(num_missing_data, "Missing Required Curve Data (Min 1 row)"))),
         ),
+        # ── NEW: Instructions and Override Button ──
+        if (num_dupes > 0) tagList(
+          p(icon("info-circle"), " If a record is falsely flagged as a duplicate, select the row(s) below and override it."),
+          actionButton(ns("override_dupe"), "Override Selected Duplicates", class = "btn-warning btn-sm", icon = icon("unlock")),
+          br(), br()
+        ),
         DTOutput(ns("staging_table")),
         br(),
         actionButton(ns("commit_bulk"), "Commit Valid Records to Database", class = "btn-success btn-lg text-white", icon = icon("database"))
@@ -123,12 +155,12 @@ bulk_upload_server <- function(id, db_conn, current_user) {
       req(staged_data())
       meta <- staged_data()$meta
       
-      # Format table for review
       df_display <- meta[, c("temp_id", "title", "species_common_name", "stressor_name", "data_rows_found", "is_duplicate")]
       
+      # ── NEW: Changed selection to 'multiple' so rows can be clicked ──
       datatable(df_display, 
                 options = list(pageLength = 10, dom = 'tp'), 
-                selection = 'none',
+                selection = 'multiple',
                 rownames = FALSE) %>%
         formatStyle(
           'is_duplicate',
@@ -142,7 +174,22 @@ bulk_upload_server <- function(id, db_conn, current_user) {
         )
     })
     
-# ── 4. Commit to Database ────────────────────────────────────────────────
+    # ── NEW: Override Duplicate Observer ─────────────────────────────────────
+    observeEvent(input$override_dupe, {
+      selected_rows <- input$staging_table_rows_selected
+      req(length(selected_rows) > 0)
+      
+      current_data <- staged_data()
+      
+      # Flip the is_duplicate flag to FALSE for the selected rows
+      current_data$meta$is_duplicate[selected_rows] <- FALSE
+      
+      # Save the updated data back to the reactive value
+      staged_data(current_data)
+      showNotification("Selected rows marked as 'Ready to Upload'.", type = "message")
+    })
+    
+    # ── 4. Commit to Database ────────────────────────────────────────────────
     observeEvent(input$commit_bulk, {
       req(staged_data())
       meta <- staged_data()$meta
@@ -161,7 +208,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
       on.exit(pool::poolReturn(conn), add = TRUE)
       
       tryCatch({
-        # Lookup user_id from the users table
         user_parts <- strsplit(current_user, "\\.")[[1]]
         if (length(user_parts) == 2) {
           db_username <- paste0(substr(user_parts[1], 1, 1), user_parts[2])
@@ -184,7 +230,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
         
         dbBegin(conn)
         
-        # Fetch current max article_id since column is not SERIAL
         max_id_query <- "SELECT COALESCE(MAX(article_id), 0) AS max_id FROM stressor_responses;"
         current_max_id <- as.integer(dbGetQuery(conn, max_id_query)$max_id[1])
         
@@ -197,19 +242,15 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           row_meta <- valid_meta[i, ]
           t_id <- row_meta$temp_id
           
-          # Increment ID for this relationship
           current_max_id <- current_max_id + 1L
           new_article_id <- current_max_id
           
-          # Drop staging helper columns
           cols_to_remove <- c("temp_id", "is_duplicate", "data_rows_found")
           insert_meta <- row_meta[, !names(row_meta) %in% cols_to_remove, drop = FALSE]
           
-          # Assign IDs
           insert_meta$article_id <- as.integer(new_article_id)
           insert_meta$user_id <- as.integer(actual_user_id)
           
-          # Format text arrays
           for (col in array_cols) {
             if (col %in% names(insert_meta)) {
               val <- insert_meta[[col]]
@@ -223,7 +264,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
             }
           }
           
-          # Format JSON citations
           if ("citations" %in% names(insert_meta)) {
             cit_val <- insert_meta[["citations"]]
             if (is.na(cit_val) || trimws(cit_val) == "") {
@@ -231,7 +271,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
             }
           }
           
-          # Build explicit placeholders with casts
           col_names <- names(insert_meta)
           placeholders <- sapply(seq_along(col_names), function(idx) {
             c_name <- col_names[idx]
@@ -252,10 +291,8 @@ bulk_upload_server <- function(id, db_conn, current_user) {
             paste(placeholders, collapse = ", ")
           )
           
-          # Pass row directly as a list without turning NAs into NULLs
           dbExecute(conn, meta_sql, params = unname(as.list(insert_meta[1, ])))
           
-          # Process curve data rows
           subset_curve <- curve_data[curve_data$temp_id == t_id, , drop = FALSE]
           subset_curve$article_id <- as.integer(new_article_id)
           subset_curve$row_index <- as.integer(1:nrow(subset_curve))
@@ -270,7 +307,6 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           )
           
           for (r in 1:nrow(subset_curve)) {
-            # Pass row directly as a list without turning NAs into NULLs
             dbExecute(conn, curve_sql, params = unname(as.list(subset_curve[r, ])))
           }
         }
