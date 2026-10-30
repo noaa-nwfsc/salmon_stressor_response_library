@@ -184,7 +184,7 @@ bulk_upload_server <- function(id, db_conn, current_user) {
         
         dbBegin(conn)
         
-        # ── Fetch current max article_id since column is not SERIAL ──────────
+        # Fetch current max article_id since column is not SERIAL
         max_id_query <- "SELECT COALESCE(MAX(article_id), 0) AS max_id FROM stressor_responses;"
         current_max_id <- as.integer(dbGetQuery(conn, max_id_query)$max_id[1])
         
@@ -197,7 +197,7 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           row_meta <- valid_meta[i, ]
           t_id <- row_meta$temp_id
           
-          # Increment ID for this new relationship
+          # Increment ID for this relationship
           current_max_id <- current_max_id + 1L
           new_article_id <- current_max_id
           
@@ -205,7 +205,7 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           cols_to_remove <- c("temp_id", "is_duplicate", "data_rows_found")
           insert_meta <- row_meta[, !names(row_meta) %in% cols_to_remove, drop = FALSE]
           
-          # Assign both explicit IDs
+          # Assign IDs
           insert_meta$article_id <- as.integer(new_article_id)
           insert_meta$user_id <- as.integer(actual_user_id)
           
@@ -252,8 +252,8 @@ bulk_upload_server <- function(id, db_conn, current_user) {
             paste(placeholders, collapse = ", ")
           )
           
-          meta_params <- lapply(insert_meta, function(x) if (is.na(x)) NULL else x)
-          dbExecute(conn, meta_sql, params = unname(meta_params))
+          # Pass row directly as a list without turning NAs into NULLs
+          dbExecute(conn, meta_sql, params = unname(as.list(insert_meta[1, ])))
           
           # Process curve data rows
           subset_curve <- curve_data[curve_data$temp_id == t_id, , drop = FALSE]
@@ -270,8 +270,8 @@ bulk_upload_server <- function(id, db_conn, current_user) {
           )
           
           for (r in 1:nrow(subset_curve)) {
-            row_vals <- lapply(subset_curve[r, ], function(x) if (is.na(x)) NULL else x)
-            dbExecute(conn, curve_sql, params = unname(row_vals))
+            # Pass row directly as a list without turning NAs into NULLs
+            dbExecute(conn, curve_sql, params = unname(as.list(subset_curve[r, ])))
           }
         }
         
