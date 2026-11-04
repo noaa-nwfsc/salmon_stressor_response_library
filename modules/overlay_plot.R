@@ -6,6 +6,9 @@ library(DBI)
 overlay_plot_ui <- function(id) {
   ns <- NS(id)
   tagList(
+    # ── NEW: In-line warning banner ──
+    uiOutput(ns("mismatch_warning_ui")),
+    
     fluidRow(
       column(12,
              plotlyOutput(ns("comparison_chart"), height = "750px")
@@ -39,13 +42,32 @@ overlay_plot_server <- function(id, selected_ids_reactive, db_conn, full_metadat
         data.frame()
       })
       
-      # Merge the real article title from the metadata so it shows in the legend
       if(nrow(df_csv) > 0) {
         meta <- full_metadata_reactive()
         df_csv <- merge(df_csv, meta[, c("article_id", "title")], by = "article_id", all.x = TRUE)
       }
       
       df_csv
+    })
+    
+    # ── Unit Mismatch Warning Banner ──
+    output$mismatch_warning_ui <- renderUI({
+      df <- plot_data()
+      req(nrow(df) > 0)
+      
+      unique_x <- unique(toupper(trimws(df$units_x[!is.na(df$units_x) & df$units_x != ""])))
+      unique_y <- unique(toupper(trimws(df$units_y[!is.na(df$units_y) & df$units_y != ""])))
+      
+      if (length(unique_x) > 1 || length(unique_y) > 1) {
+        div(
+          style = "color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; padding: 15px; border-radius: 5px; margin-bottom: 20px;",
+          h4(icon("triangle-exclamation"), " Unit Mismatch Warning", style = "margin-top: 0; font-weight: bold;"),
+          p("You are overlaying curves that use different units of measurement. Caution is advised as the axes represent different underlying scales.", style="margin-bottom: 5px;"),
+          p(style = "margin-bottom: 0;", strong("X-Axis Units: "), paste(unique_x, collapse = ", "), " | ", strong("Y-Axis Units: "), paste(unique_y, collapse = ", "))
+        )
+      } else {
+        NULL
+      }
     })
     
     # 2. Build the Interactive Plotly Graph
@@ -63,14 +85,10 @@ overlay_plot_server <- function(id, selected_ids_reactive, db_conn, full_metadat
         )
       }
       
-      # Sort data so lines draw correctly left-to-right
       df <- df[order(df$article_id, df$curve_id, df$stressor_x), ]
-      
-      # Create clean legend groups (Handles old data where curve_id might be NA)
       df$curve_label <- ifelse(is.na(df$curve_id) | df$curve_id == "", "", paste0(" (Curve: ", df$curve_id, ")"))
       df$legend_group <- paste0(df$title, df$curve_label)
       
-      # Draw the overlay plot
       p <- plot_ly(df, x = ~stressor_x, y = ~response_y, color = ~legend_group, 
                    type = 'scatter', mode = 'lines+markers',
                    hoverinfo = 'text',
@@ -89,7 +107,7 @@ overlay_plot_server <- function(id, selected_ids_reactive, db_conn, full_metadat
       p
     })
     
-    # 3. Build the Summary Cards (UPDATED TO SALMONID SCHEMA)
+    # 3. Build the Summary Cards
     output$selected_summary_cards <- renderUI({
       ids <- selected_ids_reactive()
       req(length(ids) > 0)
@@ -100,13 +118,25 @@ overlay_plot_server <- function(id, selected_ids_reactive, db_conn, full_metadat
       cards <- lapply(1:nrow(selected_meta), function(i) {
         row <- selected_meta[i, ]
         
+        loc_str <- paste(c(row$location_state_province, row$location_country), collapse = ", ")
+        if(loc_str == "NA, NA" || loc_str == "") loc_str <- "Not specified"
+        
         div(
           style = "border: 1px solid #d1d8e0; border-left: 4px solid #3182ce; border-radius: 5px; padding: 15px; margin-bottom: 15px; background-color: #f8fafc;",
+          
           fluidRow(
-            column(12, h5(strong(paste0(row$article_id, ". ", row$title)), style = "margin-top: 0; color: #2b6cb0;")),
-            column(4, p(strong("Species: "), row$species_common_name, style = "margin-bottom: 5px;")),
-            column(4, p(strong("Stressor: "), row$stressor_name, style = "margin-bottom: 5px;")),
-            column(4, p(strong("Response: "), row$response, style = "margin-bottom: 5px;"))
+            column(12, h5(strong(paste0(row$article_id, ". ", row$title)), style = "margin-top: 0; color: #2b6cb0;"))
+          ),
+          fluidRow(
+            column(3, p(strong("Species: "), row$species_common_name, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Life Stage: "), row$life_stages, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Stressor: "), row$stressor_name, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Specific Metric: "), row$specific_stressor_metric, style = "margin-bottom: 5px;"))
+          ),
+          fluidRow(
+            column(3, p(strong("Response: "), row$response, style = "margin-bottom: 5px;")),
+            column(3, p(strong("Function Type: "), row$function_derivation, style = "margin-bottom: 5px;")),
+            column(6, p(strong("Location: "), loc_str, style = "margin-bottom: 5px;"))
           )
         )
       })

@@ -30,15 +30,34 @@ setup_download_csv <- function(output, filtered_data, paginated_data, db, input,
     selected_tracker(current_cart)
   })
 
-# Auto-switch the radio button based on if anything is in the cart
-  observeEvent(selected_tracker(), {
-    if (length(selected_tracker()) > 0) {
-      updateRadioButtons(session = session, inputId = "download_option", selected = "selected")
-    } else {
-      updateRadioButtons(session = session, inputId = "download_option", selected = "filtered")
-    }
+# ── Open Download Modal ──
+  observeEvent(input$open_download_modal, {
+    showModal(modalDialog(
+      title = tagList(icon("file-export"), " Download Data"),
+      
+      radioButtons("download_option",
+        label = "Choose what to export:",
+        choices = c(
+          "Filtered records" = "filtered",
+          "Selected records" = "selected",
+          "Entire database" = "all"
+        ),
+        # Automatically select "Selected records" if the user has checked any boxes
+        selected = if (length(selected_tracker()) > 0) "selected" else "filtered"
+      ),
+      
+      size = "m",
+      easyClose = TRUE,
+      footer = tagList(
+        modalButton("Cancel"),
+        # The onclick event forces the modal to close immediately after the download starts
+        tags$span(onclick = "$('#shiny-modal').modal('hide');", 
+             downloadButton("download_csv", "Confirm Download", class = "btn btn-success text-white")
+        )
+      )
+    ))
   })
-
+    
 # Flatten list columns (text[]) for Excel export safety
   flatten_for_export <- function(df) {
     list_cols <- names(df)[sapply(df, is.list)]
@@ -53,6 +72,10 @@ setup_download_csv <- function(output, filtered_data, paginated_data, db, input,
     df
   }
 
+  observeEvent(input$trigger_download, {
+      session$sendCustomMessage("download_csv", list(id = "download_csv"))
+    })
+  
 # 2. Build the Multi-Sheet Excel Download
   output$download_csv <- downloadHandler(
     filename = function() {
