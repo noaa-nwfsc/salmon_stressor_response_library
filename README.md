@@ -11,6 +11,14 @@ This e-Library will:
 
 # User Guide
 
+## Getting Started
+
+New users can immediately begin exploring the database without an account:
+1. Navigate to the **Topics Covered** tab to view an aggregated summary of available species, life stages, locations, and stressors currently in the database.
+2. Go to the **SRF Dashboard** and use the filters to find relationships.
+3. Select one or more relationships from the datatable to overlay their functional curves on an interactive plot.
+4. Click the **Download Data** button to export a csv of the metadata and curve coordinates for your selected relationships.
+
 ## Stressor Response Metadata and Data Documentation
 
 This e-library is designed to support life cycle modelers, resource managers, and scientists by making stressor-response (SR) functions discoverable, transparent, and reusable. Each SR function describes the quantitative relationship between a stressor (e.g., temperature, flow, harvest, contaminants) and a biological response (e.g., survival, growth, migration timing, capacity, productivity).
@@ -68,38 +76,6 @@ When you download an SR function as a CSV, you receive:
 | lower.limit    | Optional lower confidence/uncertainty bound for response.y                     | numeric | OPTIONAL; NA allowed                                                       |
 | upper.limit    | Optional upper confidence/uncertainty bound for response.y                     | numeric | OPTIONAL; NA allowed                                                       |
 | sd             | Optional standard deviation for response.y                                     | numeric | OPTIONAL; NA allowed                                                       |
-
-### Examples of valid CSV files:
-
-_Note: the minimum number of data rows **per curve** for a valid csv file is **4**._
-
-#### Valid CSV File with No Optional Columns and a Single Curve
-
-```csv
-curve.id,stressor.label,stressor.x,units.x,response.label,response.y,units.y
-c1,temperature,0.5,degC,survival,92,percent
-c1,temperature,1.0,degC,survival,85,percent
-c1,temperature,1.5,degC,survival,70,percent
-c1,temperature,2.0,degC,survival,66,percent
-```
-
-#### Valid CSV File with All Optional Columns and Multiple Curves
-
-```csv
-curve.id,stressor.label,stressor.x,units.x,response.label,response.y,units.y,stressor.value,lower.limit,upper.limit,sd
-low_temp,water_temperature,5,degC,embryo_survival,0.95,proportion,5C,0.89,1.00,0.03
-low_temp,water_temperature,10,degC,embryo_survival,0.92,proportion,5C,0.84,1.00,0.04
-low_temp,water_temperature,15,degC,embryo_survival,0.88,proportion,5C,0.78,0.98,0.05
-low_temp,water_temperature,20,degC,embryo_survival,0.86,proportion,5C,0.74,0.98,0.06
-med_temp,water_temperature,5,degC,embryo_survival,0.85,proportion,10C,0.77,0.93,0.04
-med_temp,water_temperature,10,degC,embryo_survival,0.75,proportion,10C,0.63,0.87,0.06
-med_temp,water_temperature,15,degC,embryo_survival,0.60,proportion,10C,0.44,0.76,0.08
-med_temp,water_temperature,20,degC,embryo_survival,0.55,proportion,10C,0.40,0.71,0.10
-high_temp,water_temperature,5,degC,embryo_survival,0.70,proportion,15C,0.56,0.84,0.07
-high_temp,water_temperature,10,degC,embryo_survival,0.50,proportion,15C,0.32,0.68,0.09
-high_temp,water_temperature,15,degC,embryo_survival,0.30,proportion,15C,0.10,0.50,0.10
-high_temp,water_temperature,20,degC,embryo_survival,0.10,proportion,15C,0.02,0.22,0.12
-```
 
 _Note: All extracted data entries include numeric Stressor (x) and Response (y) values and are associated with a single stressor per SRF entry. Each entry is fully labeled with a Stressor Label, Response Label, and corresponding units to ensure interpretability. Where multiple curves are present for the same stressor, they are distinguished using a curve identifier and, when applicable, a stressor value describing the curve. Early entries contributed by Canadian partners (e.g., CEMPRA, Joe Model) reported the biological response as Mean System Capacity, which scaled response values from 0% to 100%. Since NOAA assumed responsibility for stewardship of the library and expanded its scope, response values have been retained in the original units and formats reported in each source study, rather than standardized across entries. Extracted data may originate from reported tables, supplemental datasets, or digitized figures. When data are digitized from figures, small uncertainties may be introduced; these are documented where possible._
 
