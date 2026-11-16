@@ -44,24 +44,29 @@ jobs:
         with:
           cache-version: 1
 
-      - name: Run testthat Unit Tests
-        shell: Rscript {0}
+      - name: Install test packages to system library
         run: |
-          library(testthat)
-          results <- testthat::test_dir("tests/testthat", reporter = "progress", stop_on_failure = TRUE)
+          Rscript --vanilla -e 'install.packages(c("testthat", "covr", "RSQLite"), repos = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")'
+
+      - name: Run testthat Unit Tests
+        env:
+          RENV_CONFIG_ACTIVE: "false"
+        run: |
+          Rscript --vanilla -e '
+            library(testthat)
+            results <- testthat::test_dir("tests/testthat", reporter = "progress", stop_on_failure = TRUE)
+          '
 
       - name: Calculate Code Coverage
         if: success()
-        shell: Rscript {0}
+        env:
+          RENV_CONFIG_ACTIVE: "false"
         run: |
-          library(covr)
-          target_files <- list.files("modules", pattern = "\\.R$", full.names = TRUE)
-          test_files <- list.files("tests/testthat", pattern = "^test.*\\.R$", full.names = TRUE)
-
-          coverage <- covr::file_coverage(
-            source_files = target_files,
-            test_files = test_files
-          )
-
-          print(coverage)
-          cat(sprintf("\nTotal Application Coverage: %.2f%%\n", covr::percent_coverage(coverage)))
+          Rscript --vanilla -e '
+            library(covr)
+            target_files <- list.files("modules", pattern = "\\.R$", full.names = TRUE)
+            test_files <- list.files("tests/testthat", pattern = "^test.*\\.R$", full.names = TRUE)
+            coverage <- covr::file_coverage(source_files = target_files, test_files = test_files)
+            print(coverage)
+            cat(sprintf("\nTotal Application Coverage: %.2f%%\n", covr::percent_coverage(coverage)))
+          '
