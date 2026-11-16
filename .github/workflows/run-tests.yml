@@ -8,19 +8,19 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04  # Pin to standard LTS with full precompiled binary support
+    runs-on: ubuntu-22.04
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       _R_CHECK_FORCE_SUGGESTS_: false
       CI: true
-      RENV_CONFIG_PAK_ENABLED: true
+      RENV_CONFIG_SYNCHRONIZED_CHECK: false
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up System Dependencies
+      - name: Set up Linux System Libraries
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -44,29 +44,35 @@ jobs:
         with:
           cache-version: 1
 
-      - name: Install test packages to system library
+      - name: Install Missing Test Dependencies into renv
+        shell: Rscript {0}
         run: |
-          Rscript --vanilla -e 'install.packages(c("testthat", "covr", "RSQLite"), repos = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")'
+          # Install test packages into the active renv library if not present
+          pkgs <- c("testthat", "covr", "RSQLite")
+          for (p in pkgs) {
+            if (!requireNamespace(p, quietly = TRUE)) {
+              install.packages(p, repos = "https://packagemanager.posit.co/cran/__linux__/jammy/latest")
+            }
+          }
 
       - name: Run testthat Unit Tests
-        env:
-          RENV_CONFIG_ACTIVE: "false"
+        shell: Rscript {0}
         run: |
-          Rscript --vanilla -e '
-            library(testthat)
-            results <- testthat::test_dir("tests/testthat", reporter = "progress", stop_on_failure = TRUE)
-          '
+          library(testthat)
+          results <- testthat::test_dir("tests/testthat", reporter = "progress", stop_on_failure = TRUE)
 
       - name: Calculate Code Coverage
         if: success()
-        env:
-          RENV_CONFIG_ACTIVE: "false"
+        shell: Rscript {0}
         run: |
-          Rscript --vanilla -e '
-            library(covr)
-            target_files <- list.files("modules", pattern = "\\.R$", full.names = TRUE)
-            test_files <- list.files("tests/testthat", pattern = "^test.*\\.R$", full.names = TRUE)
-            coverage <- covr::file_coverage(source_files = target_files, test_files = test_files)
-            print(coverage)
-            cat(sprintf("\nTotal Application Coverage: %.2f%%\n", covr::percent_coverage(coverage)))
-          '
+          library(covr)
+          target_files <- list.files("modules", pattern = "\\.R$", full.names = TRUE)
+          test_files <- list.files("tests/testthat", pattern = "^test.*\\.R$", full.names = TRUE)
+
+          coverage <- covr::file_coverage(
+            source_files = target_files,
+            test_files = test_files
+          )
+
+          print(coverage)
+          cat(sprintf("\nTotal Application Coverage: %.2f%%\n", covr::percent_coverage(coverage)))
