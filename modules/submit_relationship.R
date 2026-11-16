@@ -166,6 +166,35 @@ submit_relationship_server <- function(id) {
         )
       ))
     })
+    
+   # ── Download CSV Template Handler ──
+    output$download_csv_template <- downloadHandler(
+      filename = function() {
+        paste0("SRF_template_", Sys.Date(), ".csv")
+      },
+      content = function(file) {
+        if (exists("write_csv_template", mode = "function")) {
+          write_csv_template(file)
+        } else {
+          template_data <- data.frame(
+            curve.id = rep("c1", 5),
+            stressor.label = rep("temperature", 5),
+            stressor.x = c(10, 15, 20, 25, 30),
+            units.x = rep("degC", 5),
+            response.label = rep("survival", 5),
+            response.y = c(0.95, 0.85, 0.70, 0.50, 0.30),
+            units.y = rep("proportion", 5),
+            plot.type = c("curve", "curve", "curve", "curve", "scatter"),
+            stressor.value = rep("constant", 5),
+            lower.limit = c(0.90, 0.80, 0.65, 0.45, 0.25),
+            upper.limit = c(1.00, 0.90, 0.75, 0.55, 0.35),
+            sd = rep(0.05, 5),
+            stringsAsFactors = FALSE
+          )
+          write.csv(template_data, file, row.names = FALSE)
+        }
+      }
+    )
 
     # ── Populate Dropdowns from Live Database ──
     observe({
