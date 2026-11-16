@@ -35,6 +35,17 @@ jobs:
         with:
           cache-version: 1
 
+      - name: Install Test Dependencies
+        shell: Rscript {0}
+        run: |
+          # Ensure testing packages are installed into the active environment
+          packages <- c("testthat", "covr", "RSQLite")
+          for (pkg in packages) {
+            if (!requireNamespace(pkg, quietly = TRUE)) {
+              install.packages(pkg, repos = "[suspicious link removed]")
+            }
+          }
+
       - name: Run testthat Unit Tests
         shell: Rscript {0}
         run: |
@@ -45,11 +56,7 @@ jobs:
         if: success()
         shell: Rscript {0}
         run: |
-          if (!requireNamespace("covr", quietly = TRUE)) {
-            install.packages("covr")
-          }
           library(covr)
-
           target_files <- list.files("modules", pattern = "\\.R$", full.names = TRUE)
           test_files <- list.files("tests/testthat", pattern = "^test.*\\.R$", full.names = TRUE)
 
