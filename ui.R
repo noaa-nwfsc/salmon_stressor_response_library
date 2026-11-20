@@ -86,11 +86,8 @@ ui <- navbarPage(
         condition = "!window.location.search.includes('article_id')",
         fluidRow(
           column(8, textInput("search", "Search All Text", placeholder = "Type keywords...")),
-          column(4, actionButton(
-            "toggle_filters", 
-            "Show Filters", 
-            icon = tags$i(class = "fa fa-filter", "aria-hidden" = "true")          
-          ))
+          # Removed icon("filter")
+          column(4, actionButton("toggle_filters", "Show Filters"))
         ),
         shinyjs::hidden(
           fluidRow(
@@ -188,10 +185,10 @@ ui <- navbarPage(
           )
         ),
         
+        # Removed icon("download")
         actionButton(
           "open_download_modal", 
           "Download Data", 
-          icon = tags$i(class = "fa fa-download", "aria-hidden" = "true"), 
           class = "btn-primary"
         ),
 
@@ -213,16 +210,15 @@ ui <- navbarPage(
           )
         ),
         
-        # Back to Top floating button with accessible name & icon
+        # Back to Top floating button using text arrow instead of font icon
         tags$div(
           id = "back_to_top_fab",
           actionButton(
             inputId = "back_to_top",
-            label = NULL,
-            icon = tags$i(class = "fa fa-arrow-up", "aria-hidden" = "true"),
+            label = "↑",
             "aria-label" = "Back to top of page",
             class = "btn btn-default rounded-circle",
-            style = "width: 50px; height: 50px; font-size: 24px;"
+            style = "width: 50px; height: 50px; font-size: 26px; font-weight: bold; line-height: 1; padding: 0;"
           )
         ),
         tags$script(HTML("
