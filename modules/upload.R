@@ -17,7 +17,7 @@ upload_ui <- function(id) {
       id = ns("upload_form"),
         fluidRow(
         column(12, 
-          h3("Submit New SRF Relationship", style = "text-align: center; color: #6082B6; margin-bottom: 10px;"),
+          h3("Submit New SRF Relationship", style = "text-align: center; color: #5577ab; margin-bottom: 10px;"),
           p(
             style = "text-align: center; font-size: 1.05em; color: #555; margin-bottom: 30px; padding-left: 15px; padding-right: 15px;",
             "Fields marked with an asterisk (", strong("*"), ") and the ", strong("SR Curve Data CSV"), " are required.", br(),
@@ -53,7 +53,12 @@ upload_ui <- function(id) {
             br(),
             "Each curve must have valid (non-NA) stressor.x and response.y values."
           ),
-          downloadButton(ns("download_csv_template"), "Download CSV Template", class = "btn btn-info mb-2"),
+          downloadButton(
+            ns("download_csv_template"), 
+            "Download CSV Template", 
+            class = "btn btn-info mb-2",
+            style = "background-color: #1b809e; border-color: #1b809e; color: #ffffff;"
+          ),
           uiOutput(ns("csv_validation_status"))
         ))
       ),
