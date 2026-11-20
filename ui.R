@@ -31,6 +31,14 @@ ui <- navbarPage(
       tags$head(
         includeCSS("www/custom.css"),
         tags$style(HTML("
+          /* WCAG AA 4.5:1 Contrast Fix for Active Navbar Links against #e7e7e7 */
+          .navbar-default .navbar-nav > .active > a, 
+          .navbar-default .navbar-nav > .active > a:focus, 
+          .navbar-default .navbar-nav > .active > a:hover {
+              color: #005f9e !important;
+              font-weight: 600;
+              background-color: #e7e7e7 !important;
+          }
           #back_to_top_fab {
             position: fixed;
             bottom: 30px;
@@ -78,12 +86,16 @@ ui <- navbarPage(
         condition = "!window.location.search.includes('article_id')",
         fluidRow(
           column(8, textInput("search", "Search All Text", placeholder = "Type keywords...")),
-          column(4, actionButton("toggle_filters", "Show Filters", icon = icon("filter")))
+          column(4, actionButton(
+            "toggle_filters", 
+            "Show Filters", 
+            icon = icon("filter", "aria-hidden" = "true")
+          ))
         ),
         shinyjs::hidden(
           fluidRow(
             column(6, numericInput("page", NULL, value = 1, min = 1)),
-            column(6, numericInput("page_size", NULL, value = 10, min = 1))
+            column(6, numericInput("page_size_hidden", NULL, value = 10, min = 1))
           )
         ),
         
@@ -151,7 +163,8 @@ ui <- navbarPage(
               column(12, div(
                 style = "text-align: right;",
                 actionLink("reset_filters", "Reset Filters",
-                  style = "color: #0073e6; font-size: 14px; text-decoration: none; margin-right: 10px;"
+                  style = "color: #005f9e; font-size: 14px; text-decoration: underline; margin-right: 10px;",
+                  "aria-label" = "Reset all selected search filters"
                 )
               ))
             )
@@ -169,20 +182,20 @@ ui <- navbarPage(
                         width = "150px"),
             br(),
             
-            actionButton("prev_page_top", "← Previous", class = "btn-primary btn-sm"),
+            actionButton("prev_page_top", "← Previous", class = "btn-primary btn-sm", "aria-label" = "Go to previous page"),
             span(textOutput("page_info_top", inline = TRUE), style = "margin: 0 15px; font-weight: bold;"),
-            actionButton("next_page_top", "Next →", class = "btn-primary btn-sm")
+            actionButton("next_page_top", "Next →", class = "btn-primary btn-sm", "aria-label" = "Go to next page")
           )
         ),
         
         actionButton(
           "open_download_modal", 
           "Download Data", 
-          icon = icon("download"), 
+          icon = icon("download", "aria-hidden" = "true"), 
           class = "btn-primary"
         ),
 
-        # component for displaying the papers
+        # Component for displaying the papers
         fluidRow(
           column(8, offset = 2, uiOutput("selection_action_bar")),
           column(6, offset = 3, uiOutput("paper_cards"))
@@ -194,19 +207,20 @@ ui <- navbarPage(
           column(12, align = "center",
             style = "margin-top: 20px; margin-bottom: 20px;",
             
-            actionButton("prev_page_bottom", "← Previous", class = "btn-primary"),
+            actionButton("prev_page_bottom", "← Previous", class = "btn-primary", "aria-label" = "Go to previous page (bottom)"),
             span(textOutput("page_info_bottom", inline = TRUE), style = "margin: 0 15px; font-weight: bold;"),
-            actionButton("next_page_bottom", "Next →", class = "btn-primary")
+            actionButton("next_page_bottom", "Next →", class = "btn-primary", "aria-label" = "Go to next page (bottom)")
           )
         ),
         
-        # Back to Top floating button
+        # Back to Top floating button with accessible name & icon
         tags$div(
           id = "back_to_top_fab",
           actionButton(
             inputId = "back_to_top",
             label = NULL,
-            icon = icon("arrow-up"),
+            icon = icon("arrow-up", "aria-hidden" = "true"),
+            "aria-label" = "Back to top of page",
             class = "btn btn-default rounded-circle",
             style = "width: 50px; height: 50px; font-size: 24px;"
           )
