@@ -54,7 +54,7 @@ acknowledgement_ui <- function(id, n = NULL) {
           # FIXED: Added alt text to sponsor headshot
           tags$img(
             src = "teamimg/Aimee.jpg",
-            alt = "Photograph of Aimee Fullerton, Research Fishery Biologist",
+            alt = "Aimee Fullerton, Research Fishery Biologist",
             style = "width: 130px; height: 130px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid white; margin-bottom: 12px;"
           ),
           tags$p("Aimee Fullerton", style = "font-weight: 600; font-size: 16px; margin: 0; color: #222;")
@@ -63,7 +63,7 @@ acknowledgement_ui <- function(id, n = NULL) {
           style = "text-align: center; width: 160px;",
           tags$img(
             src = "teamimg/paxton.jpg",
-            alt = "Photograph of Paxton Calhoun, Research Fishery Biologist",
+            alt = "Paxton Calhoun, Research Fishery Biologist",
             style = "width: 130px; height: 130px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid white; margin-bottom: 12px;"
           ),
           tags$p("Paxton Calhoun", style = "font-weight: 600; font-size: 16px; margin: 0; color: #222;")
@@ -72,7 +72,7 @@ acknowledgement_ui <- function(id, n = NULL) {
           style = "text-align: center; width: 160px;",
           tags$img(
             src = "teamimg/Morgan.jpg",
-            alt = "Photograph of Morgan Bond, Research Fishery Biologist",
+            alt = "Morgan Bond, Research Fishery Biologist",
             style = "width: 130px; height: 130px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid white; margin-bottom: 12px;"
           ),
           tags$p("Morgan Bond", style = "font-weight: 600; font-size: 16px; margin: 0; color: #222;")
@@ -81,7 +81,7 @@ acknowledgement_ui <- function(id, n = NULL) {
           style = "text-align: center; width: 160px;",
           tags$img(
             src = "teamimg/Danielle.jpg",
-            alt = "Photograph of Danielle Andrews, Developer",
+            alt = "Danielle Andrews, Developer",
             style = "width: 130px; height: 130px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid white; margin-bottom: 12px;"
           ),
           tags$p("Danielle Andrews", style = "font-weight: 600; font-size: 16px; margin: 0; color: #222;")
@@ -136,7 +136,7 @@ acknowledgement_ui <- function(id, n = NULL) {
           # FIXED: Added descriptive alt text for advisor photo
           tags$img(
             src = "teamimg/Mendible.jpg",
-            alt = "Photograph of Dr. Ariana Mendible, Professor of Mathematics at Seattle University",
+            alt = "Dr. Ariana Mendible, Professor of Mathematics at Seattle University",
             style = "width: 100%; height: auto; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.15);"
           ),
           tags$p("Dr. Ariana Mendible", style = "font-weight: 600; font-size: 16px; margin: 15px 0 0 0; color: #222;"),
