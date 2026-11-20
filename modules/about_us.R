@@ -31,25 +31,25 @@ about_us <- function(id) {
               tags$li(
                 style = "margin-bottom: 15px;",
                 # FIXED: Added aria-hidden='true' to decorative icons
-                icon("circle-check", style = "color: #28a745; font-size: 1.5rem;", "aria-hidden" = "true"),
+                tags$i(class = "fa fa-circle-check", style = "color: #28a745; font-size: 1.5rem;", "aria-hidden" = "true"),
                 strong(" Improve Model Accuracy:"),
                 " Ensuring researchers and decision-makers have access to consistent, high-quality data reduces uncertainty in life cycle modeling."
               ),
               tags$li(
                 style = "margin-bottom: 15px;",
-                icon("lightbulb", style = "color: #c69500; font-size: 1.5rem;", "aria-hidden" = "true"),
+                tags$i(class = "fa fa-lightbulb", style = "color: #c69500; font-size: 1.5rem;", "aria-hidden" = "true"),
                 strong(" Identify Knowledge Gaps:"),
                 " Highlighting areas where data is lacking can guide future research and funding priorities."
               ),
               tags$li(
                 style = "margin-bottom: 15px;",
-                icon("chart-bar", style = "color: #17a2b8; font-size: 1.5rem;", "aria-hidden" = "true"),
+                tags$i(class = "fa fa-chart-bar", style = "color: #17a2b8; font-size: 1.5rem;", "aria-hidden" = "true"),
                 strong(" Support Policy & Management:"),
                 " Reliable data on stressor-response functions can inform habitat restoration, water management, and conservation policy."
               ),
               tags$li(
                 style = "margin-bottom: 15px;",
-                icon("globe", style = "color: #007bff; font-size: 1.5rem;", "aria-hidden" = "true"),
+                tags$i(class = "fa fa-globe", style = "color: #007bff; font-size: 1.5rem;", "aria-hidden" = "true"),
                 strong(" Encourage Open Science:"),
                 " By making key data easily accessible, the e-library fosters collaboration and transparency within the life cycle modeling community."
               )
