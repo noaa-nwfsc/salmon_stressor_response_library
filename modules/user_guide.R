@@ -2,6 +2,15 @@
 userGuideUI <- function(id) {
   ns <- NS(id)
   tagList(
+    tags$script(HTML("
+      function applyTableAccessibility() {
+        $('table thead th, table tr:first-child th').attr('scope', 'col');
+      }
+      $(document).ready(applyTableAccessibility);
+      $(document).on('shown.bs.tab', applyTableAccessibility);
+      $(document).on('shiny:connected', applyTableAccessibility);
+    ")),
+    
     div(
       class = "page-container",
       h1("User Guide"),
