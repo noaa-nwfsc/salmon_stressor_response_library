@@ -45,18 +45,21 @@ render_papers_server <- function(output, paginated_data, input, session) {
           # 2. THE CHECKBOX
           div(
             class = "paper-checkbox-container",
+            style = "display: flex; align-items: center; justify-content: center;", # Centers the new larger label
             tags$div(
               class = "form-group shiny-input-container",
-              style = "width: 20px; margin-bottom: 0;",
+              style = "margin-bottom: 0;", # Removed the restrictive width: 20px
               tags$div(
                 class = "checkbox",
+                style = "margin: 0;",
                 tags$label(
-                  "for" = checkbox_id, # Links the label explicitly to the input ID
-                  style = "padding: 10px; margin: -10px; cursor: pointer; display: inline-block;", # Increases clickable area
+                  "for" = checkbox_id,
+                  style = "padding: 12px; margin: 0; cursor: pointer; display: inline-block;", # Padding expands click area without shifting
                   tags$input(
                     id = checkbox_id,
                     type = "checkbox",
-                    class = "shiny-input-checkbox"
+                    class = "shiny-input-checkbox",
+                    style = "margin: 0; position: relative;"
                   ),
                   # Visually hidden text for screen readers and ANDI
                   tags$span(
@@ -68,6 +71,7 @@ render_papers_server <- function(output, paginated_data, input, session) {
             )
           ),
 
+          
           # 3. THE MAIN CONTENT
           div(
             class = "paper-content",
