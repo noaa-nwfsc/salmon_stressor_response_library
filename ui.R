@@ -76,10 +76,10 @@ ui <- navbarPage(
               $('.bootstrap-select > select').attr('tabindex', '-1');
             }
 
-            // Run initially and whenever Shiny updates inputs or renders UI
-            setTimeout(fixAccessibilityTabs, 300);
-            $(document).on('shiny:value shiny:inputchanged shiny:bound loaded.bs.select refreshed.bs.select changed.bs.select', function() {
-              setTimeout(fixAccessibilityTabs, 50);
+              // Run initially and whenever Shiny updates inputs, switches tabs, or renders UI
+              setTimeout(fixAccessibilityTabs, 300);
+              $(document).on('shown.bs.tab shiny:value shiny:inputchanged shiny:bound loaded.bs.select refreshed.bs.select changed.bs.select', function() {
+                setTimeout(fixAccessibilityTabs, 50);
             });
 
             // 2. Make Article Popups (Modals) announce properly to Screen Readers
