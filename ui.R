@@ -118,7 +118,7 @@ ui <- navbarPage(
             });
           });
         ")),
-
+        ),
       h1("Welcome to the Pacific Salmonid Stressor-Response e-Library"),
       tags$div(
         about_us("about_us")
