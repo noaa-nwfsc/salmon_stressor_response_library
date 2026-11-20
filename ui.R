@@ -18,14 +18,14 @@ addResourcePath("teamimg", "modules/images")
 ui <- navbarPage(
   id = "main_navbar",
   title = "Pacific Salmonid Stressor-Response eLibrary",
-  selected = "dashboard",
+  selected = "about",
   
   # Removed bslib theme argument entirely. Falling back to native Shiny.
 
   # About Tab
   tabPanel(
     title = "About",
-    value = "NOAA info",
+    value = "about",
     fluidPage(
       useShinyjs(),
       tags$head(
