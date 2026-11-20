@@ -1,34 +1,34 @@
 # nolint start
 library(shiny)
 
-# Reusable function that outputs Section 508 compliant tables
-render_508_table <- function(headers, rows) {
+# ── Reusable Component: Accessible Data Dictionary Table ──
+accessible_table <- function(headers, rows) {
   tags$div(
     class = "table-responsive",
     style = "margin: 20px 0;",
     tags$table(
       class = "table table-striped table-bordered",
-      style = "width: 100%; border-collapse: collapse; font-size: 15px; color: #222;",
-      # ── Table Header with scope='col' ──
+      style = "width: 100%; border-collapse: collapse; font-size: 15px; color: #333;",
+      # thead with explicit scope="col" on every header
       tags$thead(
         style = "background-color: #f1f5f9; color: #2c3e50; border-bottom: 2px solid #cbd5e1;",
         tags$tr(
           lapply(headers, function(h) {
-            tags$th(scope = "col", h, style = "padding: 12px; font-weight: 700; text-align: left;")
+            tags$th(scope = "col", h, style = "padding: 12px; font-weight: 600;")
           })
         )
       ),
-      # ── Table Body ──
+      # tbody with clean data cells
       tags$tbody(
-        lapply(rows, function(r) {
+        lapply(rows, function(row) {
           tags$tr(
             tags$td(
-              style = "padding: 10px 12px; font-weight: 600; white-space: nowrap; vertical-align: top; width: 25%;",
-              r[[3]]
+              style = "padding: 10px 12px; vertical-align: top; white-space: nowrap;",
+              tags$code(row[[1]], style = "color: #b91c1c; font-size: 14px; background-color: #fef2f2; padding: 2px 6px; border-radius: 4px;")
             ),
             tags$td(
               style = "padding: 10px 12px; vertical-align: top; line-height: 1.5;",
-              r[[4]]
+              row[[2]]
             )
           )
         })
@@ -40,40 +40,43 @@ render_508_table <- function(headers, rows) {
 userGuideUI <- function(id) {
   ns <- NS(id)
   
-  # Metadata fields exactly as defined in your dictionary
+  # ── Table 1: Metadata Fields Data ──
   metadata_rows <- list(
-    list("Main ID", "Identifier for the SR function. Links metadata to the associated dataset"),
-    list("Citation(s)", "Full citation of the primary research article, including citations for additional sources if the SR function draws on multiple papers"),
-    list("Stressor Title", "Title of the SR function. Format: Author et al. Year: Function description. Example: Honea et al. 2016: Chinook egg-to-fry survival vs incubation temperature"),
-    list("Species Common", "Common species name (e.g., Chinook salmon, Sockeye salmon)"),
-    list("Species Latin Name", "Genus species name (e.g., Oncorhynchus tshawytscha)"),
-    list("Life Stage", "Life stage of fish (e.g., juvenile, fry, smolt, adult, egg)"),
-    list("Activity", "Fish activity examined (e.g., incubation, spawning, rearing, migration)"),
-    list("Season", "Season relevant to the study (e.g., spring, summer, fall, winter)"),
-    list("Stressor Name", "Primary stressor evaluated (e.g., Water Temperature, Flow, Fine Sediment)"),
-    list("Broad Stressor Name", "High-level classification of the stressor category (e.g., Physical, Chemical, Biological)"),
-    list("Specific Stressor Metric", "Measurement metric for the stressor (e.g., 7DADM, NTU, Celsius, cfs)"),
-    list("Response", "Biological response evaluated (e.g., Survival, Growth rate, Migration timing)"),
-    list("Response Units", "Measurement units of the response (e.g., %, proportion, g/day)"),
-    list("Location Country", "Country where the empirical data were gathered or modeled"),
-    list("Location State / Province", "State or province (e.g., Washington, Oregon, California, British Columbia)"),
-    list("Location Watershed / Lab", "Watershed name, basin, or notation if the study was conducted in a laboratory"),
-    list("Location River / Creek", "Specific river, stream reach, or estuary site")
+    list("article_id", "A unique identifier assigned to each study or relationship entry in the e-library."),
+    list("title", "The formal title of the peer-reviewed article, report, or source publication."),
+    list("author", "Lead authors or institutional contributors who derived or published the relationship."),
+    list("year", "The publication year of the original study or source material."),
+    list("journal", "The scientific journal, technical agency report series, or publishing outlet."),
+    list("doi", "Digital Object Identifier (DOI) linking directly to the primary publication."),
+    list("stressor_name", "Primary environmental or anthropogenic stressor (e.g., Water Temperature, Fine Sediment, Flow Velocity)."),
+    list("broad_stressor_name", "Higher-level categorization of the stressor family (e.g., Physical, Chemical, Biological)."),
+    list("stressor_metric", "Specific unit or metric evaluated (e.g., 7-day average daily maximum temperature [7DADM], NTU)."),
+    list("species_common_name", "Common name of the salmonid species investigated (e.g., Chinook Salmon, Coho Salmon, Steelhead)."),
+    list("latin_name", "Formal scientific taxonomic name (e.g., Oncorhynchus tshawytscha)."),
+    list("life_stage", "Life history stage evaluated (e.g., Adult Spawning, Egg / Embryo, Fry Emergence, Smolt Migration)."),
+    list("activity", "Biological activity or behavior monitored (e.g., Survival, Growth Rate, Migration Timing)."),
+    list("response_label", "Label describing the biological response axis (e.g., Percent Mortality, Mean System Capacity)."),
+    list("response_units", "Measurement units of the response variable (e.g., %, proportion, g/day)."),
+    list("location_country", "Country where the empirical data were gathered or modeled."),
+    list("location_state_province", "State or province (e.g., Washington, Oregon, California, British Columbia)."),
+    list("location_watershed_lab", "Watershed name, basin, or notation if the study was conducted in a laboratory."),
+    list("location_river_creek", "Specific river, stream reach, or estuary site.")
   )
 
+  # ── Table 2: Extracted Data Columns ──
   extracted_rows <- list(
-    list("curve.id", "Identifier distinguishing distinct curves or sub-treatments within the same function entry (e.g., c1, c2)"),
-    list("stressor.label", "Human-readable label for the stressor variable plotted on the horizontal axis"),
-    list("stressor.x", "Numeric value of the environmental stressor (x-coordinate)"),
-    list("units.x", "Measurement unit for the stressor values (e.g., degC, mg/L, cfs)"),
-    list("response.label", "Human-readable label for the biological response variable plotted on the vertical axis"),
-    list("response.y", "Numeric value of the biological response (y-coordinate)"),
-    list("units.y", "Measurement unit for the response values (e.g., proportion, %, count)"),
-    list("plot.type", "Display specification for the coordinate series ('curve' for lines, 'scatter' for points)"),
-    list("stressor.value", "Categorical or sub-condition label for multi-curve sets (e.g., constant, fluctuating)"),
-    list("lower.limit", "Lower bound of the uncertainty envelope or confidence interval (if available)"),
-    list("upper.limit", "Upper bound of the uncertainty envelope or confidence interval (if available)"),
-    list("sd", "Reported standard deviation or standard error associated with the data point")
+    list("curve.id", "Identifier distinguishing distinct curves or sub-treatments within the same function entry (e.g., c1, c2)."),
+    list("stressor.label", "Human-readable label for the stressor variable plotted on the horizontal axis."),
+    list("stressor.x", "Numeric value of the environmental stressor (x-coordinate)."),
+    list("units.x", "Measurement unit for the stressor values (e.g., degC, mg/L, cfs)."),
+    list("response.label", "Human-readable label for the biological response variable plotted on the vertical axis."),
+    list("response.y", "Numeric value of the biological response (y-coordinate)."),
+    list("units.y", "Measurement unit for the response values (e.g., proportion, %, count)."),
+    list("plot.type", "Display specification for the coordinate series ('curve' for lines, 'scatter' for points)."),
+    list("stressor.value", "Categorical or sub-condition label for multi-curve sets (e.g., constant, fluctuating, high flow)."),
+    list("lower.limit", "Lower bound of the uncertainty envelope or confidence interval (if available)."),
+    list("upper.limit", "Upper bound of the uncertainty envelope or confidence interval (if available)."),
+    list("sd", "Reported standard deviation or standard error associated with the data point.")
   )
 
   tagList(
@@ -96,18 +99,19 @@ userGuideUI <- function(id) {
       ),
       hr(style = "margin: 25px 0;"),
       
-      # ── Section 1: Metadata Fields Table ──
+      # ── Section 1: Metadata Fields ──
       h2("Metadata Fields", style = "color: #2c3e50; font-size: 22px; font-weight: 600; margin-bottom: 15px;"),
       p("Each entry has an identifier and descriptive metadata fields.", style = "font-size: 16px; color: #333; margin-bottom: 15px;"),
       
-      render_508_table(
-        headers = c("Field", "Description"),
+      # Native HTML Table with hardcoded scope="col"
+      accessible_table(
+        headers = c("Field Name", "Description"),
         rows = metadata_rows
       ),
       
       hr(style = "margin: 35px 0;"),
 
-      # ── Section 2: Extracted Data Table ──
+      # ── Section 2: Extracted Data ──
       h2("Extracted Data", style = "color: #2c3e50; font-size: 22px; font-weight: 600; margin-bottom: 15px;"),
       p("When you download an SR function as an Excel Spreadsheet, you receive:", style = "font-size: 16px; color: #333;"),
       tags$ol(
@@ -117,7 +121,8 @@ userGuideUI <- function(id) {
       ),
       p("The extracted spreadsheet data have the following standardized columns:", style = "font-size: 16px; color: #333; margin-top: 15px; margin-bottom: 15px;"),
       
-      render_508_table(
+      # Native HTML Table with hardcoded scope="col"
+      accessible_table(
         headers = c("Column Name", "Description"),
         rows = extracted_rows
       ),
