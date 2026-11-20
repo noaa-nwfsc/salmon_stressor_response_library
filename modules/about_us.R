@@ -7,7 +7,7 @@ about_us <- function(id) {
 
       # ── Hero Section ──
       div(
-        style = "background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); 
+        style = "background-color: #f4f6f8; border: 1px solid #e2e8f0;
                  padding: 40px 30px; border-radius: 15px; text-align: center; 
                  margin-bottom: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);",
         h2("About this Dashboard", style = "color: #2c3e50; font-weight: 700; margin-bottom: 20px;"),
