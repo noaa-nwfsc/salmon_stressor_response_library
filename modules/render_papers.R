@@ -92,7 +92,8 @@ render_papers_server <- function(output, paginated_data, input, session) {
               # Section 1: Biological & Study Info
               column(4,
                 div(style = "border-right: 1px solid #eaeaea; padding-right: 15px; height: 100%;",
-                  tags$strong("Biological Profile", style = "color: #6082B6; display: block; border-bottom: 1px solid #eaeaea; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px;"),
+                  # Changed color from #6082B6 to #5577ab
+                  tags$strong("Biological Profile", style = "color: #5577ab; display: block; border-bottom: 1px solid #eaeaea; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px;"),
                   HTML(format_field("Type", paper$article_type)),
                   HTML(format_field("Common Name", paper$species_common_name)),
                   HTML(format_field("Latin Name", paper$latin_name)),
@@ -104,7 +105,8 @@ render_papers_server <- function(output, paginated_data, input, session) {
               # Section 2: Stressor Details
               column(4,
                 div(style = "border-right: 1px solid #eaeaea; padding-left: 5px; padding-right: 15px; height: 100%;",
-                  tags$strong("Stressor & Response", style = "color: #6082B6; display: block; border-bottom: 1px solid #eaeaea; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px;"),
+                  # Changed color from #6082B6 to #5577ab
+                  tags$strong("Stressor & Response", style = "color: #5577ab; display: block; border-bottom: 1px solid #eaeaea; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px;"),
                   HTML(format_field("Stressor", paper$stressor_name)),
                   HTML(format_field("Stressor Metric", paper$specific_stressor_metric)),
                   HTML(format_field("Response", paper$response))
@@ -114,7 +116,8 @@ render_papers_server <- function(output, paginated_data, input, session) {
               # Section 3: Location
               column(4,
                 div(style = "padding-left: 5px; height: 100%;",
-                  tags$strong("Location", style = "color: #6082B6; display: block; border-bottom: 1px solid #eaeaea; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px;"),
+                  # Changed color from #6082B6 to #5577ab
+                  tags$strong("Location", style = "color: #5577ab; display: block; border-bottom: 1px solid #eaeaea; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px;"),
                   HTML(format_field("Country", paper$location_country)),
                   HTML(format_field("State/Province", paper$location_state_province)),
                   HTML(format_field("Watershed/Lab", paper$location_watershed_lab)),
