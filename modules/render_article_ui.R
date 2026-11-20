@@ -46,7 +46,14 @@ render_article_ui <- function(article_id, data) {
     # ── Article Metadata ───────────────────────────────────────────────────
     div(
       style = "border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background-color: #f8f9fa; border-radius: 8px;",
-      actionLink(paste0("toggle_metadata_", article_id), "Article Metadata ▼", class = "section-title"),
+      actionLink(
+        paste0("toggle_metadata_", article_id), 
+        "Article Metadata ▼", 
+        class = "section-title", 
+        role = "button",
+        "aria-expanded" = "false",
+        "aria-controls" = meta_id
+      ),
       hidden(div(
         id    = meta_id,
         style = "font-size:1.1em;",
@@ -56,7 +63,7 @@ render_article_ui <- function(article_id, data) {
         fluidRow(column(4, strong("Specific Stressor Metric:")), column(8, textOutput(paste0("specific_stressor_metric_", article_id)))),
         fluidRow(column(4, strong("Response:")), column(8, textOutput(paste0("response_", article_id)))),
         fluidRow(column(4, strong("Life Stage:")), column(8, textOutput(paste0("life_stage_", article_id)))),
-    # NEW: Dynamic UI placeholders for conditional location fields
+    # Dynamic UI placeholders for conditional location fields
         uiOutput(paste0("location_country_ui_", article_id)),
         uiOutput(paste0("location_state_province_ui_", article_id)),
         uiOutput(paste0("location_watershed_lab_ui_", article_id)),
@@ -67,7 +74,14 @@ render_article_ui <- function(article_id, data) {
     # ── Description & Function Details ─────────────────────────────────────
     div(
       style = "border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background-color: #ffffff; border-radius: 8px;",
-      actionLink(paste0("toggle_description_", article_id), "Description & Function Details ▼", class = "section-title"),
+      actionLink(
+        paste0("toggle_description_", article_id),
+        "Description & Function Details ▼",
+        class = "section-title",
+        role = "button",
+        "aria-expanded" = "false",
+        "aria-controls" = desc_id
+      ),
       hidden(div(
         id = desc_id,
         style = "font-size:1.1em;",
@@ -95,7 +109,14 @@ render_article_ui <- function(article_id, data) {
     # ── Confidence Rankings ────────────────────────────────────────────────
     div(
       style = "border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background-color: #ffffff; border-radius: 8px;",
-      actionLink(paste0("toggle_confidence_", article_id), "Confidence Rankings & Uncertainty ▼", class = "section-title"),
+      actionLink(
+        paste0("toggle_confidence_", article_id),
+        "Confidence Rankings & Uncertainty ▼",
+        class = "section-title",
+        role = "button",
+        "aria-expanded" = "false",
+        "aria-controls" = conf_id
+      ),
       hidden(div(
         id    = conf_id,
         style = "font-size:1.1em;",
@@ -106,7 +127,14 @@ render_article_ui <- function(article_id, data) {
     # ── Citations ──────────────────────────────────────────────────────────
     div(
       style = "border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background-color: #ffffff; border-radius: 8px;",
-      actionLink(paste0("toggle_citations_", article_id), "Citation(s) ▼", class = "section-title"),
+      actionLink(
+        paste0("toggle_citations_", article_id),
+        "Citation(s) ▼",
+        class = "section-title",
+        role = "button",
+        "aria-expanded" = "false",
+        "aria-controls" = cite_id
+      ),
       hidden(div(
         id    = cite_id,
         style = "font-size:1.1em;",
@@ -117,7 +145,14 @@ render_article_ui <- function(article_id, data) {
     # ── CSV Data Table ─────────────────────────────────────────────────────
     div(
       style = "border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background-color: #ffffff; border-radius: 8px;",
-      actionLink(paste0("toggle_csv_", article_id), "Stressor Response Data ▼", class = "section-title"),
+      actionLink(
+        paste0("toggle_csv_", article_id),
+        "Stressor Response Data ▼",
+        class = "section-title",
+        role = "button",
+        "aria-expanded" = "false",
+        "aria-controls" = csv_id
+      ),
       hidden(div(
         id    = csv_id,
         style = "font-size:1.1em;",
@@ -128,7 +163,14 @@ render_article_ui <- function(article_id, data) {
     # ── Interactive Plot ───────────────────────────────────────────────────
     div(
       style = "border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background-color: #ffffff; border-radius: 8px;",
-      actionLink(paste0("toggle_interactive_plot_", article_id), "Stressor Response Chart ▼", class = "section-title"),
+      actionLink(
+        paste0("toggle_interactive_plot_", article_id),
+        "Stressor Response Chart ▼",
+        class = "section-title",
+        role = "button",
+        "aria-expanded" = "false",
+        "aria-controls" = plot_id
+      ),
       hidden(div(
         id    = plot_id,
         style = "font-size:1.1em;",
