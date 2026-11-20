@@ -60,6 +60,10 @@ render_article_server <- function(input, output, session, paper_id, paper_row, d
   update_arrow <- function(toggle_id, visible) {
     arrow <- if (visible) " ▲" else " ▼"
     updateActionLink(session, toggle_id, label = paste0(base_labels[[toggle_id]], arrow))
+    shinyjs::runjs(sprintf(
+      "$('#%s').attr('aria-expanded', '%s');",
+      toggle_id, ifelse(visible, "true", "false")
+    ))
   }
 
   # Expand all — show all sections and update all arrows to ▲
