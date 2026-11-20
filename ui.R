@@ -57,8 +57,68 @@ ui <- navbarPage(
           Shiny.addCustomMessageHandler('download_csv', function(data) {
             document.getElementById(data.id).click();
           });
-        "))
-      ),
+
+          $(document).ready(function() {
+            // 1. Fix bootstrap-select tabindex='null' & remove tabindex='0' from giant tab containers
+            function fixAccessibilityTabs() {
+              // Remove tabindex from giant layout containers (fixes Tab #3 reading the whole page)
+              $('.tab-pane, #filter_panel, .well').removeAttr('tabindex');
+
+              // Fix pickerInput buttons that get tabindex='null' after selection/update
+              $('.bootstrap-select > .dropdown-toggle').each(function() {
+                var ti = $(this).attr('tabindex');
+                if (!ti || ti === 'null') {
+                  $(this).attr('tabindex', '0');
+                }
+              });
+
+              // Ensure the hidden native <select> inside pickerInput doesn't trap tabbing
+              $('.bootstrap-select > select').attr('tabindex', '-1');
+            }
+
+            // Run initially and whenever Shiny updates inputs or renders UI
+            setTimeout(fixAccessibilityTabs, 300);
+            $(document).on('shiny:value shiny:inputchanged shiny:bound loaded.bs.select refreshed.bs.select changed.bs.select', function() {
+              setTimeout(fixAccessibilityTabs, 50);
+            });
+
+            // 2. Make Article Popups (Modals) announce properly to Screen Readers
+            var lastFocusedElement = null;
+            $(document).on('show.bs.modal', '.modal', function() {
+              lastFocusedElement = document.activeElement;
+            });
+
+            $(document).on('shown.bs.modal', '.modal', function() {
+              var $modal = $(this);
+              $modal.attr({
+                'role': 'dialog',
+                'aria-modal': 'true'
+              });
+
+              // Find the article title (h3) or modal-title and link it via aria-labelledby
+              var $heading = $modal.find('h3, .modal-title').first();
+              if ($heading.length) {
+                if (!$heading.attr('id')) {
+                  $heading.attr('id', 'modal-article-heading');
+                }
+                $modal.attr('aria-labelledby', $heading.attr('id'));
+                
+                // Move screen reader focus directly to the article title so it reads aloud immediately!
+                $heading.attr('tabindex', '-1').focus();
+              } else {
+                $modal.find('.modal-content').attr('tabindex', '-1').focus();
+              }
+            });
+
+            // Return keyboard focus back to the article card button when the popup closes
+            $(document).on('hidden.bs.modal', '.modal', function() {
+              if (lastFocusedElement) {
+                $(lastFocusedElement).focus();
+              }
+            });
+          });
+        ")),
+
       h1("Welcome to the Pacific Salmonid Stressor-Response e-Library"),
       tags$div(
         about_us("about_us")
