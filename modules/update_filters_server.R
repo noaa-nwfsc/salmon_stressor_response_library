@@ -51,6 +51,9 @@ update_filters_server <- function(input, output, session, data, db) {
     sort(vals[!is.na(vals) & nzchar(vals)])
   }
 
+# Track previous choices so we don't needlessly rebuild dropdowns and steal keyboard focus
+  prev_choices <- reactiveValues()
+
   observe({
     for (name in names(filter_specs)) {
       spec <- filter_specs[[name]]
@@ -69,11 +72,17 @@ update_filters_server <- function(input, output, session, data, db) {
 
       # Only show choices that exist in both the DB universe and the filtered subset
       valid_choices <- lookup_vals[lookup_vals %in% dynamic_vals]
+      new_selected <- intersect(input[[spec$input_id]], valid_choices)
 
-      updatePickerInput(session, spec$input_id,
-        choices  = valid_choices,
-        selected = intersect(input[[spec$input_id]], valid_choices)
-      )
+      # Only call updatePickerInput if choices actually changed!
+      # This prevents bootstrap-select from resetting keyboard focus while tabbing.
+      if (!identical(prev_choices[[spec$input_id]], valid_choices)) {
+        prev_choices[[spec$input_id]] <- valid_choices
+        updatePickerInput(session, spec$input_id,
+          choices  = valid_choices,
+          selected = new_selected
+        )
+      }
     }
   })
 }
