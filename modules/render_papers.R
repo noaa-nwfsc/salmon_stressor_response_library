@@ -51,11 +51,17 @@ render_papers_server <- function(output, paginated_data, input, session) {
               tags$div(
                 class = "checkbox",
                 tags$label(
+                  "for" = checkbox_id, # Links the label explicitly to the input ID
+                  style = "padding: 10px; margin: -10px; cursor: pointer; display: inline-block;", # Increases clickable area
                   tags$input(
                     id = checkbox_id,
                     type = "checkbox",
-                    class = "shiny-input-checkbox",
-                    "aria-label" = paste("Select profile", paper$article_id, paper$title)
+                    class = "shiny-input-checkbox"
+                  ),
+                  # Visually hidden text for screen readers and ANDI
+                  tags$span(
+                    style = "position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;",
+                    paste("Select profile", paper$article_id, paper$title)
                   )
                 )
               )
