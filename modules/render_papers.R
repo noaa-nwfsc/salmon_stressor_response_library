@@ -45,7 +45,21 @@ render_papers_server <- function(output, paginated_data, input, session) {
           # 2. THE CHECKBOX
           div(
             class = "paper-checkbox-container",
-            checkboxInput(inputId = checkbox_id, label = NULL, value = FALSE, width = "20px")
+            tags$div(
+              class = "form-group shiny-input-container",
+              style = "width: 20px; margin-bottom: 0;",
+              tags$div(
+                class = "checkbox",
+                tags$label(
+                  tags$input(
+                    id = checkbox_id,
+                    type = "checkbox",
+                    class = "shiny-input-checkbox",
+                    "aria-label" = paste("Select profile", paper$article_id, paper$title)
+                  )
+                )
+              )
+            )
           ),
 
           # 3. THE MAIN CONTENT
