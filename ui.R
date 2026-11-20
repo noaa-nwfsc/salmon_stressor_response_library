@@ -89,7 +89,7 @@ ui <- navbarPage(
           column(4, actionButton(
             "toggle_filters", 
             "Show Filters", 
-            icon = icon("filter", "aria-hidden" = "true")
+            icon = tags$i(class = "fa fa-filter", "aria-hidden" = "true")          
           ))
         ),
         shinyjs::hidden(
@@ -191,7 +191,7 @@ ui <- navbarPage(
         actionButton(
           "open_download_modal", 
           "Download Data", 
-          icon = icon("download", "aria-hidden" = "true"), 
+          icon = tags$i(class = "fa fa-download", "aria-hidden" = "true"), 
           class = "btn-primary"
         ),
 
@@ -219,7 +219,7 @@ ui <- navbarPage(
           actionButton(
             inputId = "back_to_top",
             label = NULL,
-            icon = icon("arrow-up", "aria-hidden" = "true"),
+            icon = tags$i(class = "fa fa-arrow-up", "aria-hidden" = "true"),
             "aria-label" = "Back to top of page",
             class = "btn btn-default rounded-circle",
             style = "width: 50px; height: 50px; font-size: 24px;"
