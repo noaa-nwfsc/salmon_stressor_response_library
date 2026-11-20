@@ -17,12 +17,17 @@ submit_relationship_ui <- function(id) {
     div(
       id = ns("submit_relationship_form"),
       
-      fluidRow(
+    fluidRow(
         column(8, offset = 2,
-          h2("Submit a Relationship", style = "text-align: center; color: #6082B6;"),
+          h2("Submit a Relationship", style = "text-align: center; color: #5577ab;"),
           p("Use the form below to suggest a new relationship between a stressor and a response. This submission will be placed in a queue for our team to review before being published to the live database.", style = "text-align: center; color: #555;"),
           div(style = "text-align: center; margin-bottom: 25px;",
-            actionButton(ns("show_readme"), "ℹ️ Formatting Guide (Read Me)", class = "btn-info")
+            actionButton(
+              ns("show_readme"), 
+              "ℹ️ Formatting Guide (Read Me)", 
+              class = "btn-info",
+              style = "background-color: #1b809e; border-color: #1b809e; color: #ffffff;"
+            )
           )
         )
       ),
@@ -60,7 +65,12 @@ submit_relationship_ui <- function(id) {
           strong("Data Uploads"),
           div(id = ns("csv_wrapper"), customFileInput(ns("sr_csv_file"), "Optional: Stressor-Response Curve Data CSV", accept = ".csv")),
           uiOutput(ns("csv_validation_status")),
-          downloadButton(ns("download_csv_template"), "Download CSV Template", class = "btn btn-info mb-2"),
+          downloadButton(
+            ns("download_csv_template"), 
+            "Download CSV Template", 
+            class = "btn btn-info mb-2",
+            style = "background-color: #1b809e; border-color: #1b809e; color: #ffffff;"
+          ),
           hr(),
           div(id = ns("pdf_wrapper"), customFileInput(ns("supporting_pdf"), "Optional: Supporting PDF", accept = c(".pdf", "application/pdf")))
         ))
