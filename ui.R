@@ -156,64 +156,52 @@ ui <- navbarPage(
           )
         ),
         
-        # ── RESTORED PICKER INPUTS WITH SHINYJS HIDDEN FIX ──
+        # ── VIRTUAL SELECT INPUTS (BS5-READY & ACCESSIBLE) ──
         shinyjs::hidden(
           div(
             id = "filter_panel",
             fluidRow(
-              column(3, pickerInput("stressor", "Stressor Name",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("stressor", "Stressor Name",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("stressor_metric", "Stressor Metric",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("stressor_metric", "Stressor Metric",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("species", "Species Common Name",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("species", "Species Common Name",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("broad_stressor_name", "Broad Stressor Name",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("broad_stressor_name", "Broad Stressor Name",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               ))
             ),
             fluidRow(
-              column(3, pickerInput("life_stage", "Life Stage",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("life_stage", "Life Stage",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("activity", "Activity",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("activity", "Activity",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("latin_name", "Latin Name",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("latin_name", "Latin Name",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               ))
             ),
             fluidRow(
-              column(3, pickerInput("article_type", "Article Type",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("article_type", "Article Type",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("location_country", "Country",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("location_country", "Country",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("location_state_province", "State / Province",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("location_state_province", "State / Province",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               )),
-              column(3, pickerInput("location_watershed_lab", "Watershed / Lab",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("location_watershed_lab", "Watershed / Lab",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               ))
             ),
             fluidRow(
-              column(3, pickerInput("location_river_creek", "River / Creek",
-                choices = list(), multiple = TRUE,
-                options = list("actions-box" = TRUE, "live-search" = TRUE)
+              column(3, virtualSelectInput("location_river_creek", "River / Creek",
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
               ))
             ),
             fluidRow(
