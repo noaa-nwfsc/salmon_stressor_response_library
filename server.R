@@ -111,7 +111,6 @@ server <- function(input, output, session) {
       
       div(
         style = "font-size: 1.1em; color: #2c3e50;",
-        icon("check-square", style = "color: if(num_selected > 0) '#28a745' else '#888'; margin-right: 8px;"),
         strong(sprintf("%d Profiles Selected", num_selected))
       ),
       
@@ -120,8 +119,7 @@ server <- function(input, output, session) {
         actionButton(
           "btn_overlay_plots", 
           "Overlay Plots", 
-          class = "btn-primary", 
-          icon = icon("chart-line"), 
+          class = "btn-primary",
           style = "margin-left: 10px; background-color: #2c6e49; border-color: #2c6e49;",
           disabled = if (num_selected == 0) "disabled" else NULL
         ),
@@ -199,7 +197,6 @@ server <- function(input, output, session) {
         tabPanel(
           title = "Admin Upload",
           value = "admin_upload_tab",
-          icon = icon("upload"),
           upload_ui("secure_admin_upload") 
         )
       )
@@ -213,7 +210,6 @@ server <- function(input, output, session) {
         tabPanel(
           title = "Review Queue",
           value = "admin_review_tab",
-          icon = icon("tasks"),
           admin_review_ui("secure_admin_review")
         )
       )
@@ -227,7 +223,6 @@ server <- function(input, output, session) {
         tabPanel(
           title = "Bulk Upload",
           value = "bulk_upload_tab",
-          icon = icon("file-excel"),
           bulk_upload_ui("secure_bulk_upload")
         )
       )
