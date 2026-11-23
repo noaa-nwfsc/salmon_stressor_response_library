@@ -30,6 +30,23 @@ ui <- navbarPage(
       useShinyjs(),
       tags$head(
         includeCSS("www/custom.css"),
+        
+        # ── VirtualSelect Custom Reset Handler ──────────────────────────────
+        tags$script(HTML("
+          $(document).on('shiny:connected', function() {
+            Shiny.addCustomMessageHandler('reset-all-virtual-selects', function(message) {
+              if (message.ids && Array.isArray(message.ids)) {
+                message.ids.forEach(function(id) {
+                  var el = document.getElementById(id);
+                  if (el && el.reset) {
+                    el.reset(); // Clears VirtualSelect values & selection tags on the client
+                  }
+                });
+              }
+            });
+          });
+        ")),
+        
         tags$style(HTML("
           /* WCAG AA 4.5:1 Contrast Fix for Active Navbar Links against #e7e7e7 */
           .navbar-default .navbar-nav > .active > a, 
