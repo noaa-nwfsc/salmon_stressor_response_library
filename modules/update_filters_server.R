@@ -51,8 +51,8 @@ update_filters_server <- function(input, output, session, data, db) {
     sort(vals[!is.na(vals) & nzchar(vals)])
   }
 
-# Track previous choices so we don't needlessly rebuild dropdowns and steal keyboard focus
-  prev_choices <- reactiveValues()
+  # Cache previous choices and selections so we don't rebuild dropdowns unnecessarily
+  prev_state <- new.env(parent = emptyenv())
 
   observe({
     for (name in names(filter_specs)) {
@@ -64,21 +64,24 @@ update_filters_server <- function(input, output, session, data, db) {
         df_sub <- apply_filter(df_sub, input[[other$input_id]], other$column)
       }
 
-      # Full universe of choices from the pre-loaded dataframe
       lookup_vals <- get_dynamic_vals(data, spec$column)
-
-      # Dynamic subset from currently filtered data
       dynamic_vals <- get_dynamic_vals(df_sub, spec$column)
 
-      # Only show choices that exist in both the DB universe and the filtered subset
       valid_choices <- lookup_vals[lookup_vals %in% dynamic_vals]
-      new_selected <- intersect(input[[spec$input_id]], valid_choices)
+      current_sel <- input[[spec$input_id]]
+      new_selected <- intersect(current_sel, valid_choices)
 
-      # Only call updatePickerInput if choices actually changed!
-      # This prevents bootstrap-select from resetting keyboard focus while tabbing.
-      if (!identical(prev_choices[[spec$input_id]], valid_choices)) {
-        prev_choices[[spec$input_id]] <- valid_choices
-        updatePickerInput(session, spec$input_id,
+      norm_curr <- if (is.null(current_sel)) character(0) else as.character(current_sel)
+      norm_new  <- if (is.null(new_selected)) character(0) else as.character(new_selected)
+
+      cached <- prev_state[[spec$input_id]]
+
+      # Only update if available choices or selections actually changed
+      if (is.null(cached) || !identical(cached$choices, valid_choices) || !identical(norm_curr, norm_new)) {
+        prev_state[[spec$input_id]] <- list(choices = valid_choices, selected = norm_new)
+        updateVirtualSelect(
+          session  = session,
+          inputId  = spec$input_id,
           choices  = valid_choices,
           selected = new_selected
         )
