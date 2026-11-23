@@ -179,46 +179,46 @@ ui <- navbarPage(
             id = "filter_panel",
             fluidRow(
               column(3, virtualSelectInput("stressor", "Stressor Name",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("stressor_metric", "Stressor Metric",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("species", "Species Common Name",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("broad_stressor_name", "Broad Stressor Name",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               ))
             ),
             fluidRow(
               column(3, virtualSelectInput("life_stage", "Life Stage",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("activity", "Activity",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("latin_name", "Latin Name",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               ))
             ),
             fluidRow(
               column(3, virtualSelectInput("article_type", "Article Type",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("location_country", "Country",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("location_state_province", "State / Province",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               )),
               column(3, virtualSelectInput("location_watershed_lab", "Watershed / Lab",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               ))
             ),
             fluidRow(
               column(3, virtualSelectInput("location_river_creek", "River / Creek",
-                choices = NULL, multiple = TRUE, search = TRUE, width = "100%"
+                choices = NULL, multiple = TRUE, search = TRUE, width = "100%, showValueAsTags = FALSE, optionsCount = 6"
               ))
             ),
             fluidRow(
